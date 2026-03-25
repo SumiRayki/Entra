@@ -1,138 +1,137 @@
-# ChatterUI - A simple app for LLMs
+# Entra - AI 角色扮演聊天应用
 
-ChatterUI is a native mobile frontend for LLMs.
+<p align="center">
+  <img src="assets/images/icon.png" width="120" alt="Entra Logo">
+</p>
 
-Run LLMs on device or connect to various commercial or open source APIs. ChatterUI aims to provide a mobile-friendly interface with fine-grained control over chat structuring.
+Entra 是一款基于 [ChatterUI](https://github.com/Vali-98/ChatterUI) 深度定制的 Android AI 角色扮演聊天应用，专为中文用户打造，支持角色创建、用户角色管理、互动叙事游戏等功能。
 
-If you like the app, feel free support me here:
+## 📥 下载安装
 
-<a href='https://ko-fi.com/W7W7X8T7W' target='_blank'><img height='42' style='border:0px;height:42px;' src='https://storage.ko-fi.com/cdn/kofi6.png?v=6' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
+前往 [Releases](https://github.com/SumiRayki/Entra/releases) 下载最新版本：
 
-<div>
-Chat With Characters or Assistants
-<br/>
-<img src ="https://github.com/Vali-98/ChatterUI/blob/master/assets/screenshots/characterlist.png" width="150" > 
-<img src ="https://github.com/Vali-98/ChatterUI/blob/master/assets/screenshots/chat.png" width="150" > 
-<br/>
-Use on-device Models or APIs
-<br/>
-<img src ="https://github.com/Vali-98/ChatterUI/blob/master/assets/screenshots/models.png" width="150" > 
-<img src ="https://github.com/Vali-98/ChatterUI/blob/master/assets/screenshots/api.png" width="150" > 
-<br/>
-Modify And Customize
-<br/>
-<img src ="https://github.com/Vali-98/ChatterUI/blob/master/assets/screenshots/charactereditor.png" width="150" > 
-<img src ="https://github.com/Vali-98/ChatterUI/blob/master/assets/screenshots/settings.png" width="150" >
-<br/>
-Personalize Yourself
-<br/>
-<img src ="https://github.com/Vali-98/ChatterUI/blob/master/assets/screenshots/usereditor.png" width="150" > 
-<img src ="https://github.com/Vali-98/ChatterUI/blob/master/assets/screenshots/userlist.png" width="150" >
-</div>
+| 文件 | 适用设备 |
+|------|---------|
+| `Entra-vX.X.X-arm64.apk` | 大多数手机和平板（ARM64 处理器） |
+| `Entra-vX.X.X-x86_64.apk` | 模拟器、x86 设备 |
 
-## Features:
+## ✨ 主要功能
 
--   Run LLMs on-device in Local Mode
--   Connect to various APIs in Remote Mode
--   Chat with characters. (Supports the Character Card v2 specification.)
--   Create and manage multiple chats per character.
--   Customize Sampler fields and Instruct formatting
--   Integrates with your device’s text-to-speech (TTS) engine
+### 🎭 角色创建大师
 
-<br/>
+内置 AI 助手，通过自然语言描述即可快速创建角色。支持三种创建模式：
 
-# Usage
+- **AI 角色** — 创建聊天对象，包含完整属性（性格、背景故事、外貌、首条消息等）
+- **用户角色** — 创建你自己扮演的角色，在开始聊天前选择
+- **游戏** — 创建互动叙事冒险，包含背景设定、配角等
 
-Download and install latest APK from the [releases](https://github.com/Vali-98/ChatterUI/releases/latest) page.
-
-<i>iOS is Currently unavailable due to lacking iOS hardware for development</i>
-
-## Local Mode
-
-ChatterUI uses a [llama.cpp](https://github.com/ggerganov/llama.cpp) under the hood to run gguf files on device. A custom adapter is used to integrate with react-native: [cui-llama.rn](https://github.com/Vali-98/cui-llama.rn)
-
-To use on-device inferencing, first enable Local Mode, then go to Models > Import Model / Use External Model and choose a gguf model that can fit on your device's memory. The importing functions are as follows:
-
--   Import Model: Copies the model file into ChatterUI, potentially speeding up startup time.
--   Use External Model: Uses a model from your device storage directly, removing the need to copy large files into ChatterUI but with a slight delay in load times.
-
-After that, you can load the model and begin chatting!
-
-_Note: For devices with Snapdragon 8 Gen 1 and above or Exynos 2200+, it is recommended to use the Q4_0 quantization for optimized performance._
-
-## Remote Mode
-
-Remote Mode allows you to connect to a few common APIs from both commercial and open source projects.
-
-### Open Source Backends:
-
--   koboldcpp
--   text-generation-webui
--   Ollama
-
-### Dedicated API:
-
--   OpenAI
--   Claude _(with ability to use a proxy)_
--   Cohere
--   Open Router
--   Mancer
--   AI Horde
-
-### Generic backends:
-
--   Generic Text Completions
--   Generic Chat Completions
-
-_These should be compliant with any Text Completion/Chat Completion backends such as Groq or Infermatic._
-
-### Custom APIs:
-
-Is your API provider missing? ChatterUI allows you to define APIs using its template system.
-
-Read more about it [here!](https://github.com/Vali-98/ChatterUI/discussions/126)
-
-## Development
-
-### Android
-
-To run a development build, follow these simple steps:
-
--   Install any Java 17/21 SDK of your choosing
--   Install `android-sdk` via `Android Studio`
--   Clone the repo:
-
+使用方式：打开「角色创建大师」对话，输入描述即可：
 ```
-git clone https://github.com/Vali-98/ChatterUI.git
+创建AI角色：一个傲娇的猫娘女仆，银色长发
+创建用户角色：一个18岁的魔法学院学生
+创建游戏：中世纪奇幻世界的冒险
 ```
 
--   Install dependencies via npm and run via Expo:
+AI 输出角色/游戏信息后，点击下方按钮一键创建。
 
-```
+### 🎮 互动叙事游戏
+
+在主界面切换到「游戏」标签页，点击游戏即可开始冒险：
+
+- AI 以第三人称叙述者视角讲述故事
+- 每段叙事结尾提供 **3 个选项**：
+  - **选项 1** — 正常/保守路线
+  - **选项 2** — 大胆/冒险路线
+  - **选项 3** — NSFW 方向
+- 回复数字 `1`、`2` 或 `3` 即可推进剧情
+- 支持编辑和删除游戏
+
+### 👤 用户角色系统
+
+- 支持创建多个用户角色，每个角色有完整的属性设定
+- 包含基本属性（性别、年龄、身高、体重、性格、背景故事、人物关系、外貌描述）
+- 支持 NSFW 属性（描述、罩杯、臀围、敏感部位、性取向）
+- 开始聊天时弹出角色选择界面，选择本次扮演的角色
+- AI 在对话中会区分角色属性和用户属性，不会混淆
+
+### 🔗 API 连接
+
+支持多种 LLM API 后端：
+
+- **DeepSeek** — 内置连接模板，输入 API Key 即可使用
+- **OpenAI 兼容** — 支持所有 OpenAI 格式的 API
+- 其他 ChatterUI 原生支持的后端（Claude、KoboldAI、ollama 等）
+
+### 🔞 NSFW 支持
+
+- 角色和用户角色均支持 NSFW 属性字段
+- 当角色启用 NSFW 时，系统自动注入解锁提示词
+- 游戏模式下选项 3 默认为 NSFW 方向
+- 角色创建大师可直接创建包含完整 NSFW 设定的角色
+
+## 🚀 快速开始
+
+1. **安装应用** — 下载对应架构的 APK 并安装
+2. **配置 API** — 打开侧边栏 → API 连接 → 选择 DeepSeek（或其他） → 填入 API Key → 选择模型
+3. **开始聊天** — 点击「角色创建大师」创建你的第一个角色，或直接创建游戏
+4. **切换标签** — 主界面顶部可在「角色」和「游戏」之间切换
+
+## 🛠️ 从源码构建
+
+### 环境要求
+
+- Node.js 18+
+- Android Studio（含 Android SDK 和 NDK）
+- Java 17+（推荐使用 Android Studio 内置的 JBR）
+
+### 构建步骤
+
+```bash
+# 克隆仓库
+git clone https://github.com/SumiRayki/Entra.git
+cd Entra
+
+# 安装依赖
 npm install
-npx expo run:android
+
+# 生成 Android 项目
+npx expo prebuild --platform android --clean
+
+# 构建 Release APK
+cd android
+./gradlew assembleRelease
 ```
 
-#### Building an APK
+构建产物位于 `android/app/build/outputs/apk/release/`。
 
-Requires Node.js, Java 17/21 SDK and Android SDK. Expo uses EAS to build apps which requires a Linux environment.
+如需构建分架构 APK，在 `android/app/build.gradle` 的 `android {}` 块中添加：
 
-1. Clone the repo.
-2. Rename the `eas.json.example` to `eas.json`.
-3. Modify `"ANDROID_SDK_ROOT"` to the directory of your Android SDK
-4. Run the following:
-
+```groovy
+splits {
+    abi {
+        enable true
+        reset()
+        include "arm64-v8a", "x86_64"
+        universalApk false
+    }
+}
 ```
-npm install
-eas build --platform android --local
-```
 
-### IOS
+## 📋 技术栈
 
-Currently in development
+- **框架** — React Native (Expo 53) + expo-router
+- **数据库** — SQLite (Drizzle ORM)
+- **状态管理** — Zustand + MMKV
+- **UI** — React Native Reanimated + Gesture Handler
 
-## Acknowledgement
+## 🙏 致谢
 
--   [llama.cpp](https://github.com/ggerganov/llama.cpp) - the underlying engine to run LLMs
--   [llama.rn](https://github.com/mybigday/llama.rn) - the original react-native llama.cpp adapter
+本项目基于 [ChatterUI](https://github.com/Vali-98/ChatterUI) 开发，感谢原作者的出色工作。
 
+- [ChatterUI](https://github.com/Vali-98/ChatterUI) — 原始项目
+- [llama.cpp](https://github.com/ggerganov/llama.cpp) — 本地 LLM 推理引擎
+- [llama.rn](https://github.com/mybigday/llama.rn) — React Native llama.cpp 适配器
+
+## 📄 许可证
+
+本项目遵循与 ChatterUI 相同的开源协议。
