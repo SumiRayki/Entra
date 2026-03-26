@@ -11,7 +11,7 @@ import {
     chats,
     tags,
 } from 'db/schema'
-import { and, asc, desc, eq, gte, inArray, like, notExists, notInArray, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, gte, inArray, like, ne, notExists, notInArray, sql } from 'drizzle-orm'
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { Asset } from 'expo-asset'
 import { randomUUID } from 'expo-crypto'
@@ -294,7 +294,11 @@ export namespace Characters {
                             },
                         },
                     },
-                    where: (characters, { eq }) => eq(characters.type, type),
+                    where: (characters, { eq }) =>
+                        and(
+                            eq(characters.type, type),
+                            ne(characters.creator, NARRATOR_CREATOR)
+                        ),
                     orderBy: orderBy === 'id' ? characters.id : desc(characters.last_modified),
                 })
 
@@ -355,7 +359,11 @@ export namespace Characters {
                             },
                         },
                     },
-                    where: (characters, { eq }) => eq(characters.type, type),
+                    where: (characters, { eq }) =>
+                        and(
+                            eq(characters.type, type),
+                            ne(characters.creator, NARRATOR_CREATOR)
+                        ),
                     orderBy: orderBy === 'id' ? characters.id : desc(characters.last_modified),
                 })
             }
@@ -416,7 +424,8 @@ export namespace Characters {
                                   )
                                 : undefined
 
-                        return and(base, search, hidden, filteredTags)
+                        const notNarrator = ne(characters.creator, NARRATOR_CREATOR)
+                        return and(base, notNarrator, search, hidden, filteredTags)
                     },
                     with: {
                         tags: {
@@ -899,6 +908,7 @@ export namespace Characters {
     }
 
     export const SYSTEM_CARD_MARKER = '__SYSTEM_CARD__'
+    export const NARRATOR_CREATOR = 'Entra Adventure'
 
     export const isSystemCard = (card?: { creator_notes?: string }) => {
         return card?.creator_notes === SYSTEM_CARD_MARKER

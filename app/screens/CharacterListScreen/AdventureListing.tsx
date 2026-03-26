@@ -158,7 +158,7 @@ const AdventureListing: React.FC<AdventureListingProps> = ({
                 mes_example: '',
                 system_prompt: '',
                 post_history_instructions: '',
-                creator: 'Entra Adventure',
+                creator: Characters.NARRATOR_CREATOR,
                 character_version: '1.0',
             })
             .returning({ id: characters.id })
