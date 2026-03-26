@@ -5,7 +5,7 @@ module.exports = {
         name: IS_DEV ? 'Entra (DEV)' : 'Entra',
         newArchEnabled: true,
         slug: 'entra',
-        version: '0.1.0',
+        version: '0.1.1',
         orientation: 'default',
         icon: './assets/images/icon.png',
         scheme: 'entra',
