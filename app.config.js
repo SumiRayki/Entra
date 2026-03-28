@@ -28,6 +28,7 @@ module.exports = {
                 monochromeImage: './assets/images/adaptive-icon-foreground.png',
                 backgroundColor: '#F9F9F9',
             },
+            versionCode: 2,
             edgeToEdgeEnabled: true,
             package: IS_DEV ? 'com.entra.app.dev' : 'com.entra.app',
             userInterfaceStyle: 'light',
