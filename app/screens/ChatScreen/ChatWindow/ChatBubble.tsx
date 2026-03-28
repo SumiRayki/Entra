@@ -79,27 +79,69 @@ const parseUserCard = (text: string) => {
     }
 }
 
+const parseSupportingCharacters = (supportingRaw: string) => {
+    const supporting: { name: string; brief_description: string }[] = []
+    let current: { name: string; brief_description: string } | null = null
+
+    const pushCurrent = () => {
+        if (!current?.name.trim() || !current.brief_description.trim()) return
+
+        supporting.push({
+            name: current.name.trim(),
+            brief_description: current.brief_description.trim(),
+        })
+        current = null
+    }
+
+    const lines = supportingRaw
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
+
+    for (const line of lines) {
+        const normalized = line
+            .replace(/^[•●·▪◦○*-]\s*/, '')
+            .replace(/^\d+[\.\)、]\s*/, '')
+            .trim()
+
+        const match = normalized.match(/^【?([^【】:：]+)】?\s*[:：]\s*(.+)$/)
+        if (match) {
+            pushCurrent()
+            current = {
+                name: match[1].trim(),
+                brief_description: match[2].trim(),
+            }
+            continue
+        }
+
+        if (!current) {
+            current = {
+                name: normalized.replace(/^【|】$/g, '').trim(),
+                brief_description: '',
+            }
+            continue
+        }
+
+        current.brief_description = current.brief_description
+            ? `${current.brief_description}\n${normalized}`
+            : normalized
+    }
+
+    pushCurrent()
+    return supporting
+}
+
 const parseAdventure = (text: string) => {
     const get = (key: string) => getField(text, key)
     const name = get('游戏名')
     if (!name) return null
     const supportingRaw = get('配角')
-    const supporting: { name: string; brief_description: string }[] = []
-    if (supportingRaw) {
-        const lines = supportingRaw.split('\n').filter((l) => l.trim())
-        for (const line of lines) {
-            const match = line.match(/^[·\-\d.、]+\s*(.+?)[：:]\s*(.+)/)
-            if (match) {
-                supporting.push({ name: match[1].trim(), brief_description: match[2].trim() })
-            }
-        }
-    }
     return {
         name,
         description: get('游戏简介'),
         scenario: get('背景故事'),
         system_prompt: get('系统提示词'),
-        supporting,
+        supporting: supportingRaw ? parseSupportingCharacters(supportingRaw) : [],
     }
 }
 
@@ -274,8 +316,8 @@ const ChatBubble: React.FC<ChatTextProps> = ({
                                 textAlign: 'right',
                                 fontSize: fontSize.s,
                             }}>
-                            {`Prompt: ${getFiniteValue(timings.prompt_per_second)} t/s`}
-                            {`   Text Gen: ${getFiniteValue(timings.predicted_per_second)} t/s`}
+                            {`Prompt: ${getFiniteValue(timings?.prompt_per_second ?? null)} t/s`}
+                            {`   Text Gen: ${getFiniteValue(timings?.predicted_per_second ?? null)} t/s`}
                         </Text>
                     )}
 

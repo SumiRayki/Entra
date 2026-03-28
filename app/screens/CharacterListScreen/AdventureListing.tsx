@@ -158,7 +158,7 @@ const AdventureListing: React.FC<AdventureListingProps> = ({
                         alignItems: 'center',
                         justifyContent: 'center',
                     }}>
-                    <Text style={{ fontSize: 24 }}>🎃</Text>
+                    <Text style={{ fontSize: 24 }}>🎮</Text>
                 </View>
 
                 <View style={{ flex: 1, paddingLeft: 12 }}>
