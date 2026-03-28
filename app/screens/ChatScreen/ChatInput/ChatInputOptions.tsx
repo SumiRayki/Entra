@@ -1,18 +1,43 @@
 import Drawer from '@components/views/Drawer'
 import PopupMenu from '@components/views/PopupMenu'
+import { db as database } from '@db'
 import { Ionicons } from '@expo/vector-icons'
+import { Chats } from '@lib/state/Chat'
 import { Theme } from '@lib/theme/ThemeManager'
+import { setCurrentAdventureId } from '@screens/AdventureEditorScreen'
+import { adventureChats } from 'db/schema'
+import { eq } from 'drizzle-orm'
 import { useRouter } from 'expo-router'
 import { StyleSheet } from 'react-native'
 
 const ChatOptions = () => {
     const router = useRouter()
     const styles = useStyles()
+    const { chatId } = Chats.useChat()
 
     const setShow = Drawer.useDrawerStore((state) => state.setShow)
 
     const setShowChat = (b: boolean) => {
         setShow(Drawer.ID.CHATLIST, b)
+    }
+
+    const openEditor = async () => {
+        if (!chatId) {
+            router.push('/screens/CharacterEditorScreen')
+            return
+        }
+
+        const adventureLink = await database.query.adventureChats.findFirst({
+            where: eq(adventureChats.chat_id, chatId),
+        })
+
+        if (adventureLink) {
+            setCurrentAdventureId(adventureLink.adventure_id)
+            router.push('/screens/AdventureEditorScreen')
+            return
+        }
+
+        router.push('/screens/CharacterEditorScreen')
     }
 
     return (
@@ -27,9 +52,9 @@ const ChatOptions = () => {
                     icon: 'back',
                 },
                 {
-                    onPress: (m) => {
+                    onPress: async (m) => {
                         m.current?.close()
-                        router.push('/screens/CharacterEditorScreen')
+                        await openEditor()
                     },
                     label: '编辑角色',
                     icon: 'edit',
@@ -52,7 +77,7 @@ const ChatOptions = () => {
 export default ChatOptions
 
 const useStyles = () => {
-    const { color, spacing, borderWidth } = Theme.useTheme()
+    const { color } = Theme.useTheme()
 
     return StyleSheet.create({
         optionsButton: {
