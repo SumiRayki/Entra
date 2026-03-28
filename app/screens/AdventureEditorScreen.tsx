@@ -6,6 +6,7 @@ import Avatar from '@components/views/Avatar'
 import HeaderTitle from '@components/views/HeaderTitle'
 import { db as database } from '@db'
 import { AntDesign } from '@expo/vector-icons'
+import { syncAdventureNarrator } from '@lib/state/Adventure'
 import { Characters } from '@lib/state/Characters'
 import { Logger } from '@lib/state/Logger'
 import { Theme } from '@lib/theme/ThemeManager'
@@ -149,6 +150,7 @@ const AdventureEditorScreen = () => {
             if (allChars.length > 0) {
                 await database.insert(adventureCharacters).values(allChars)
             }
+            await syncAdventureNarrator(advId!)
             return true
         } catch (e) {
             Logger.errorToast('保存失败：' + e)

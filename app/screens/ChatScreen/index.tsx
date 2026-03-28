@@ -4,6 +4,7 @@ import Drawer from '@components/views/Drawer'
 import HeaderButton from '@components/views/HeaderButton'
 import HeaderTitle from '@components/views/HeaderTitle'
 import SettingsDrawer from '@components/views/SettingsDrawer'
+import { ensureAdventureChatLink, getAdventureIdByChatId } from '@lib/state/Adventure'
 import { Characters } from '@lib/state/Characters'
 import { Chats } from '@lib/state/Chat'
 import ChatInput, { useInputHeightStore } from '@screens/ChatScreen/ChatInput'
@@ -47,10 +48,21 @@ const ChatMenu = () => {
     }, [])
 
     const handleCreateChat = async () => {
-        if (charId)
-            Chats.db.mutate.createChat(charId).then((chatId) => {
-                if (chatId) loadChat(chatId)
-            })
+        if (!charId) return
+
+        const newChatId = await Chats.db.mutate.createChat(charId)
+        if (!newChatId) return
+
+        const adventureId = chat?.id ? await getAdventureIdByChatId(chat.id) : null
+        if (adventureId) {
+            await ensureAdventureChatLink(
+                adventureId,
+                newChatId,
+                Characters.useUserStore.getState().id ?? null
+            )
+        }
+
+        await loadChat(newChatId)
     }
 
     return (

@@ -9,7 +9,8 @@ import { Logger } from '@lib/state/Logger'
 import { Theme } from '@lib/theme/ThemeManager'
 import { Stack, useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -70,9 +71,11 @@ const AddConnection = () => {
     return (
         <SafeAreaView edges={['bottom']} style={styles.mainContainer}>
             <Stack.Screen options={{ title: '添加连接' }} />
-            <ScrollView
+            <KeyboardAwareScrollView
+                bottomOffset={16}
                 style={{ flex: 1 }}
                 showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="always"
                 contentContainerStyle={{ rowGap: 16, paddingBottom: 24 }}>
                 <DropdownSheet
                     style={{ marginBottom: 8 }}
@@ -227,7 +230,7 @@ const AddConnection = () => {
                         <Text style={styles.hintText}>在模型回复前预填充内容</Text>
                     </View>
                 )}
-            </ScrollView>
+            </KeyboardAwareScrollView>
             <ThemedButton
                 label="创建 API"
                 onPress={() => {

@@ -92,8 +92,8 @@ android {
         applicationId 'com.entra.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "0.1.3"
+        versionCode 3
+        versionName "0.1.4"
     }
     signingConfigs {
         debug {
@@ -120,6 +120,7 @@ android {
     packagingOptions {
         jniLibs {
             useLegacyPackaging (findProperty('expo.useLegacyPackaging')?.toBoolean() ?: false)
+            pickFirsts += ['**/libworklets.so']
         }
     }
     androidResources {

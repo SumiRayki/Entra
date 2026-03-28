@@ -1,19 +1,27 @@
 import Drawer from '@components/views/Drawer'
 import PopupMenu from '@components/views/PopupMenu'
-import { db as database } from '@db'
 import { Ionicons } from '@expo/vector-icons'
+import { getAdventureIdByChatId, getAdventureIdFromCreatorNotes } from '@lib/state/Adventure'
+import { Characters } from '@lib/state/Characters'
 import { Chats } from '@lib/state/Chat'
 import { Theme } from '@lib/theme/ThemeManager'
 import { setCurrentAdventureId } from '@screens/AdventureEditorScreen'
-import { adventureChats } from 'db/schema'
-import { eq } from 'drizzle-orm'
 import { useRouter } from 'expo-router'
+import { useEffect, useState } from 'react'
 import { StyleSheet } from 'react-native'
+import { useShallow } from 'zustand/react/shallow'
 
 const ChatOptions = () => {
     const router = useRouter()
     const styles = useStyles()
     const { chatId } = Chats.useChat()
+    const [adventureId, setAdventureId] = useState<number | null>(null)
+    const { creatorNotes, charId } = Characters.useCharacterStore(
+        useShallow((state) => ({
+            creatorNotes: state.card?.creator_notes,
+            charId: state.id,
+        }))
+    )
 
     const setShow = Drawer.useDrawerStore((state) => state.setShow)
 
@@ -21,22 +29,37 @@ const ChatOptions = () => {
         setShow(Drawer.ID.CHATLIST, b)
     }
 
-    const openEditor = async () => {
-        if (!chatId) {
-            router.push('/screens/CharacterEditorScreen')
-            return
+    useEffect(() => {
+        let cancelled = false
+
+        const loadAdventureId = async () => {
+            const linkedAdventureId = chatId ? await getAdventureIdByChatId(chatId) : null
+            const inferredAdventureId = getAdventureIdFromCreatorNotes(creatorNotes)
+
+            if (!cancelled) {
+                setAdventureId(linkedAdventureId ?? inferredAdventureId)
+            }
         }
 
-        const adventureLink = await database.query.adventureChats.findFirst({
-            where: eq(adventureChats.chat_id, chatId),
-        })
+        loadAdventureId()
 
-        if (adventureLink) {
-            setCurrentAdventureId(adventureLink.adventure_id)
+        return () => {
+            cancelled = true
+        }
+    }, [chatId, creatorNotes])
+
+    const openEditor = async () => {
+        if (adventureId) {
+            setCurrentAdventureId(adventureId)
             router.push('/screens/AdventureEditorScreen')
             return
         }
 
+        router.push('/screens/CharacterEditorScreen')
+    }
+
+    const openNarratorViewer = () => {
+        if (!charId) return
         router.push('/screens/CharacterEditorScreen')
     }
 
@@ -59,6 +82,18 @@ const ChatOptions = () => {
                     label: '编辑角色',
                     icon: 'edit',
                 },
+                ...(adventureId
+                    ? [
+                          {
+                              onPress: (m: any) => {
+                                  m.current?.close()
+                                  openNarratorViewer()
+                              },
+                              label: '查看叙述者',
+                              icon: 'search1',
+                          },
+                      ]
+                    : []),
                 {
                     onPress: (m) => {
                         setShowChat(true)

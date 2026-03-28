@@ -1,6 +1,7 @@
 import ThemedButton from '@components/buttons/ThemedButton'
 import ThemedTextInput from '@components/input/ThemedTextInput'
 import Drawer from '@components/views/Drawer'
+import { ensureAdventureChatLink, getAdventureIdByChatId } from '@lib/state/Adventure'
 import { useDebounce } from '@lib/hooks/Debounce'
 import { Characters } from '@lib/state/Characters'
 import { Chats } from '@lib/state/Chat'
@@ -27,7 +28,7 @@ const ChatsDrawer = () => {
         setShow(Drawer.ID.CHATLIST, b)
     }
 
-    const { loadChat } = Chats.useChat()
+    const { loadChat, chatId: currentChatId } = Chats.useChat()
 
     const [searchResults, setSearchResults] = useState<
         Awaited<ReturnType<typeof Chats.db.query.searchChat>>
@@ -61,10 +62,21 @@ const ChatsDrawer = () => {
     }
 
     const handleCreateChat = async () => {
-        if (charId)
-            Chats.db.mutate.createChat(charId).then((chatId) => {
-                if (chatId) handleLoadChat(chatId)
-            })
+        if (!charId) return
+
+        const newChatId = await Chats.db.mutate.createChat(charId)
+        if (!newChatId) return
+
+        const adventureId = currentChatId ? await getAdventureIdByChatId(currentChatId) : null
+        if (adventureId) {
+            await ensureAdventureChatLink(
+                adventureId,
+                newChatId,
+                Characters.useUserStore.getState().id ?? null
+            )
+        }
+
+        await handleLoadChat(newChatId)
     }
 
     return (

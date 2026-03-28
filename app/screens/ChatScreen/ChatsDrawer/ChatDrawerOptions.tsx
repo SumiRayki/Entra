@@ -1,6 +1,7 @@
 import Alert from '@components/views/Alert'
 import PopupMenu, { MenuRef } from '@components/views/PopupMenu'
 import TextBoxModal from '@components/views/TextBoxModal'
+import { ensureAdventureChatLink, getAdventureIdByChatId } from '@lib/state/Adventure'
 import { Characters } from '@lib/state/Characters'
 import { Chats } from '@lib/state/Chat'
 import { Logger } from '@lib/state/Logger'
@@ -41,12 +42,20 @@ const ChatEditPopup: React.FC<ChatEditPopupProps> = ({ item }) => {
                 {
                     label: '删除对话',
                     onPress: async () => {
+                        const adventureId = await getAdventureIdByChatId(item.id)
                         await deleteChat(item.id)
                         if (charId && chatId === item.id) {
                             const returnedChatId = await Chats.db.query.chatNewestId(charId)
                             const chatId = returnedChatId
                                 ? returnedChatId
                                 : await Chats.db.mutate.createChat(charId)
+                            if (adventureId && chatId) {
+                                await ensureAdventureChatLink(
+                                    adventureId,
+                                    chatId,
+                                    item.user_id ?? null
+                                )
+                            }
                             chatId && (await loadChat(chatId))
                         } else if (item.id === chatId) {
                             Logger.errorToast(`创建默认对话时出错`)
@@ -69,7 +78,18 @@ const ChatEditPopup: React.FC<ChatEditPopupProps> = ({ item }) => {
                 {
                     label: '克隆对话',
                     onPress: async () => {
+                        const adventureId = await getAdventureIdByChatId(item.id)
                         await Chats.db.mutate.cloneChat(item.id)
+                        if (adventureId) {
+                            const clonedChatId = await Chats.db.query.chatNewestId(item.character_id)
+                            if (clonedChatId && clonedChatId !== item.id) {
+                                await ensureAdventureChatLink(
+                                    adventureId,
+                                    clonedChatId,
+                                    item.user_id ?? null
+                                )
+                            }
+                        }
                         menuRef.current?.close()
                     },
                 },
