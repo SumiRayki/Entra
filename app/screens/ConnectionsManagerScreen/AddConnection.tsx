@@ -4,6 +4,7 @@ import DropdownSheet from '@components/input/DropdownSheet'
 import MultiDropdownSheet from '@components/input/MultiDropdownSheet'
 import ThemedTextInput from '@components/input/ThemedTextInput'
 import { CLAUDE_VERSION } from '@lib/constants/GlobalValues'
+import { minimaxModelFallbacks } from '@lib/engine/API/DefaultAPI'
 import { APIManagerValue, APIManager } from '@lib/engine/API/APIManagerState'
 import { Logger } from '@lib/state/Logger'
 import { Theme } from '@lib/theme/ThemeManager'
@@ -46,12 +47,18 @@ const AddConnection = () => {
         const result = await fetch(values.modelEndpoint, { headers: { ...auth } })
         const data = await result.json()
         if (result.status !== 200) {
+            if (template.name === 'MiniMax') {
+                setModelList(minimaxModelFallbacks)
+            }
             Logger.error(`无法获取模型列表：${data?.error?.message}`)
             return
         }
         const models = getNestedValue(data, template.model.modelListParser)
         const isArray = Array.isArray(models)
         if (!models || !isArray) {
+            if (template.name === 'MiniMax') {
+                setModelList(minimaxModelFallbacks)
+            }
             Logger.warn('无法解析模型列表！')
             if (!models) {
                 Logger.error('模型列表返回空值')
@@ -90,7 +97,7 @@ const AddConnection = () => {
                             friendlyName: values.friendlyName,
                             active: true,
                             configName: item.name,
-                            model: undefined,
+                            model: item.defaultValues.model,
                         })
                     }}
                     modalTitle="选择连接类型"

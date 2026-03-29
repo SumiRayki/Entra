@@ -2,6 +2,15 @@ import { SamplerID } from '@lib/constants/SamplerData'
 
 import { APIConfiguration } from './APIBuilder.types'
 
+export const minimaxModelFallbacks = [
+    { id: 'MiniMax-M2.7-highspeed' },
+    { id: 'MiniMax-M2.5' },
+    { id: 'MiniMax-M2.5-highspeed' },
+    { id: 'MiniMax-M2.1' },
+    { id: 'MiniMax-M2.1-highspeed' },
+    { id: 'MiniMax-M2' },
+]
+
 export const defaultTemplates: APIConfiguration[] = [
     // OPENAI
     {
@@ -70,6 +79,73 @@ export const defaultTemplates: APIConfiguration[] = [
             editableCompletionPath: false,
             editableModelPath: false,
             selectableModel: false,
+        },
+    },
+    // MiniMax
+    {
+        version: 1,
+        name: 'MiniMax',
+
+        defaultValues: {
+            endpoint: 'https://api.minimax.io/v1/chat/completions',
+            modelEndpoint: 'https://api.minimax.io/v1/models',
+            prefill: '',
+            firstMessage: '',
+            key: '',
+            model: minimaxModelFallbacks[0],
+        },
+
+        features: {
+            usePrefill: false,
+            useFirstMessage: false,
+            useKey: true,
+            useModel: true,
+            multipleModels: false,
+        },
+
+        request: {
+            requestType: 'stream',
+            samplerFields: [
+                { externalName: 'max_context_length', samplerID: SamplerID.CONTEXT_LENGTH },
+                { externalName: 'max_tokens', samplerID: SamplerID.GENERATED_LENGTH },
+                { externalName: 'stream', samplerID: SamplerID.STREAMING },
+                { externalName: 'temperature', samplerID: SamplerID.TEMPERATURE },
+                { externalName: 'top_p', samplerID: SamplerID.TOP_P },
+                { externalName: 'presence_penalty', samplerID: SamplerID.PRESENCE_PENALTY },
+                { externalName: 'frequency_penalty', samplerID: SamplerID.FREQUENCY_PENALTY },
+                { externalName: 'seed', samplerID: SamplerID.SEED },
+            ],
+            completionType: {
+                type: 'chatCompletions',
+                userRole: 'user',
+                systemRole: 'system',
+                assistantRole: 'assistant',
+                contentName: 'content',
+            },
+            authHeader: 'Authorization',
+            authPrefix: 'Bearer ',
+            responseParsePattern: 'choices.0.delta.content',
+            useStop: true,
+            stopKey: 'stop',
+            promptKey: 'messages',
+            removeLength: true,
+        },
+
+        payload: {
+            type: 'openai',
+        },
+
+        model: {
+            useModelContextLength: false,
+            nameParser: 'id',
+            contextSizeParser: '',
+            modelListParser: 'data',
+        },
+
+        ui: {
+            editableCompletionPath: false,
+            editableModelPath: false,
+            selectableModel: true,
         },
     },
     // DeepSeek

@@ -5,6 +5,7 @@ import MultiDropdownSheet from '@components/input/MultiDropdownSheet'
 import ThemedTextInput from '@components/input/ThemedTextInput'
 import FadeBackrop from '@components/views/FadeBackdrop'
 import { CLAUDE_VERSION } from '@lib/constants/GlobalValues'
+import { minimaxModelFallbacks } from '@lib/engine/API/DefaultAPI'
 import { APIConfiguration } from '@lib/engine/API/APIBuilder.types'
 import { APIManagerValue, APIManager } from '@lib/engine/API/APIManagerState'
 import { Logger } from '@lib/state/Logger'
@@ -70,11 +71,20 @@ const ConnectionEditor: React.FC<ConnectionEditorProps> = ({
         const result = await fetch(values.modelEndpoint, { headers: { ...auth } })
         const data = await result.json()
         if (result.status !== 200) {
+            if (template.name === 'MiniMax') {
+                setModelList(minimaxModelFallbacks)
+            }
             Logger.error(`无法获取模型列表：${data?.error?.message}`)
             return
         }
         const models = getNestedValue(data, template.model.modelListParser)
-        setModelList(models)
+        setModelList(
+            Array.isArray(models)
+                ? models
+                : template.name === 'MiniMax'
+                  ? minimaxModelFallbacks
+                  : []
+        )
     }
 
     useEffect(() => {
