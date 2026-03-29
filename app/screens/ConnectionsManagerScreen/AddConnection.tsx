@@ -36,6 +36,10 @@ const AddConnection = () => {
 
     const handleGetModelList = async () => {
         if (!template.features.useModel) return
+        if (template.name === 'MiniMax' && !values.key?.trim()) {
+            setModelList(minimaxModelFallbacks)
+            return
+        }
 
         const auth: any = {}
         if (template.features.useKey) {

@@ -61,6 +61,10 @@ const ConnectionEditor: React.FC<ConnectionEditorProps> = ({
 
     const handleGetModelList = async () => {
         if (!template.features.useModel || !show) return
+        if (template.name === 'MiniMax' && !values.key?.trim()) {
+            setModelList(minimaxModelFallbacks)
+            return
+        }
         const auth: any = {}
         if (template.features.useKey) {
             auth[template.request.authHeader] = template.request.authPrefix + values.key

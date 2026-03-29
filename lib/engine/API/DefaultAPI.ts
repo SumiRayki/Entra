@@ -3,7 +3,6 @@ import { SamplerID } from '@lib/constants/SamplerData'
 import { APIConfiguration } from './APIBuilder.types'
 
 export const minimaxModelFallbacks = [
-    { id: 'MiniMax-M2.7-highspeed' },
     { id: 'MiniMax-M2.5' },
     { id: 'MiniMax-M2.5-highspeed' },
     { id: 'MiniMax-M2.1' },
