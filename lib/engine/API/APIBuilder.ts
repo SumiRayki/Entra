@@ -79,7 +79,9 @@ export const buildAndSendRequest = async ({
         let header: any = {}
         if (apiConfig.features.useKey) {
             const anthropicVersion =
-                apiConfig.name === 'Claude' ? { 'anthropic-version': CLAUDE_VERSION } : {}
+                apiConfig.name === 'Claude' || apiConfig.name === 'MiniMax'
+                    ? { 'anthropic-version': CLAUDE_VERSION }
+                    : {}
 
             header = {
                 ...anthropicVersion,

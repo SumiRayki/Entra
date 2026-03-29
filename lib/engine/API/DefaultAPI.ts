@@ -3,6 +3,8 @@ import { SamplerID } from '@lib/constants/SamplerData'
 import { APIConfiguration } from './APIBuilder.types'
 
 export const minimaxModelFallbacks = [
+    { id: 'MiniMax-M2.7' },
+    { id: 'MiniMax-M2.7-highspeed' },
     { id: 'MiniMax-M2.5' },
     { id: 'MiniMax-M2.5-highspeed' },
     { id: 'MiniMax-M2.1' },
@@ -86,8 +88,8 @@ export const defaultTemplates: APIConfiguration[] = [
         name: 'MiniMax',
 
         defaultValues: {
-            endpoint: 'https://api.minimax.io/v1/chat/completions',
-            modelEndpoint: 'https://api.minimax.io/v1/models',
+            endpoint: 'https://api.minimaxi.com/anthropic/v1/messages',
+            modelEndpoint: 'https://api.minimaxi.com/anthropic/v1/models',
             prefill: '',
             firstMessage: '',
             key: '',
@@ -95,7 +97,7 @@ export const defaultTemplates: APIConfiguration[] = [
         },
 
         features: {
-            usePrefill: false,
+            usePrefill: true,
             useFirstMessage: false,
             useKey: true,
             useModel: true,
@@ -110,9 +112,7 @@ export const defaultTemplates: APIConfiguration[] = [
                 { externalName: 'stream', samplerID: SamplerID.STREAMING },
                 { externalName: 'temperature', samplerID: SamplerID.TEMPERATURE },
                 { externalName: 'top_p', samplerID: SamplerID.TOP_P },
-                { externalName: 'presence_penalty', samplerID: SamplerID.PRESENCE_PENALTY },
-                { externalName: 'frequency_penalty', samplerID: SamplerID.FREQUENCY_PENALTY },
-                { externalName: 'seed', samplerID: SamplerID.SEED },
+                { externalName: 'top_k', samplerID: SamplerID.TOP_K },
             ],
             completionType: {
                 type: 'chatCompletions',
@@ -120,18 +120,20 @@ export const defaultTemplates: APIConfiguration[] = [
                 systemRole: 'system',
                 assistantRole: 'assistant',
                 contentName: 'content',
+                supportsAudio: true,
+                supportsImages: true,
             },
-            authHeader: 'Authorization',
-            authPrefix: 'Bearer ',
-            responseParsePattern: 'choices.0.delta.content',
+            authHeader: 'x-api-key',
+            authPrefix: '',
+            responseParsePattern: 'delta.text',
             useStop: true,
-            stopKey: 'stop',
+            stopKey: 'stop_sequences',
             promptKey: 'messages',
             removeLength: true,
         },
 
         payload: {
-            type: 'openai',
+            type: 'claude',
         },
 
         model: {

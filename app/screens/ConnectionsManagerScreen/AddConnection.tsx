@@ -36,7 +36,7 @@ const AddConnection = () => {
 
     const handleGetModelList = async () => {
         if (!template.features.useModel) return
-        if (template.name === 'MiniMax' && !values.key?.trim()) {
+        if (template.name === 'MiniMax') {
             setModelList(minimaxModelFallbacks)
             return
         }
@@ -44,7 +44,7 @@ const AddConnection = () => {
         const auth: any = {}
         if (template.features.useKey) {
             auth[template.request.authHeader] = template.request.authPrefix + values.key
-            if (template.name === 'Claude') {
+            if (template.name === 'Claude' || template.name === 'MiniMax') {
                 auth['anthropic-version'] = CLAUDE_VERSION
             }
         }

@@ -61,14 +61,14 @@ const ConnectionEditor: React.FC<ConnectionEditorProps> = ({
 
     const handleGetModelList = async () => {
         if (!template.features.useModel || !show) return
-        if (template.name === 'MiniMax' && !values.key?.trim()) {
+        if (template.name === 'MiniMax') {
             setModelList(minimaxModelFallbacks)
             return
         }
         const auth: any = {}
         if (template.features.useKey) {
             auth[template.request.authHeader] = template.request.authPrefix + values.key
-            if (template.name === 'Claude') {
+            if (template.name === 'Claude' || template.name === 'MiniMax') {
                 auth['anthropic-version'] = CLAUDE_VERSION
             }
         }
