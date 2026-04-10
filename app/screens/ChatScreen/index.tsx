@@ -1,0 +1,153 @@
+import ThemedButton from '@components/buttons/ThemedButton'
+import AvatarViewer from '@components/views/AvatarViewer'
+import Drawer from '@components/views/Drawer'
+import HeaderButton from '@components/views/HeaderButton'
+import HeaderTitle from '@components/views/HeaderTitle'
+import SettingsDrawer from '@components/views/SettingsDrawer'
+import { AntDesign } from '@expo/vector-icons'
+import { AppSettings } from '@lib/constants/GlobalValues'
+import { ensureAdventureChatLink, getAdventureIdByChatId } from '@lib/state/Adventure'
+import { Characters } from '@lib/state/Characters'
+import { Chats } from '@lib/state/Chat'
+import { Theme } from '@lib/theme/ThemeManager'
+import ChatInput, { useInputHeightStore } from '@screens/ChatScreen/ChatInput'
+import ChatWindow from '@screens/ChatScreen/ChatWindow'
+import ChatsDrawer from '@screens/ChatScreen/ChatsDrawer'
+import { useEffect } from 'react'
+import { View } from 'react-native'
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller'
+import { useMMKVBoolean } from 'react-native-mmkv'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useShallow } from 'zustand/react/shallow'
+import { useChatEditorStore } from './ChatWindow/ChatEditor'
+
+const ChatMenu = () => {
+    const insets = useSafeAreaInsets()
+    const { color } = Theme.useTheme()
+    const { unloadCharacter, charId } = Characters.useCharacterStore(
+        useShallow((state) => ({
+            unloadCharacter: state.unloadCard,
+            charId: state.id,
+        }))
+    )
+
+    const editorVisible = useChatEditorStore(useShallow((state) => state.editMode))
+
+    const chatInputHeight = useInputHeightStore(useShallow((state) => state.height))
+    const heightOffset = insets.bottom < 25 ? chatInputHeight : 0
+    const [chatTopFade, setChatTopFade] = useMMKVBoolean(AppSettings.ChatTopFade)
+
+    const { chat, unloadChat, loadChat } = Chats.useChat()
+
+    const { showSettings, showChats } = Drawer.useDrawerStore(
+        useShallow((state) => ({
+            showSettings: state.values?.[Drawer.ID.SETTINGS],
+            showChats: state.values?.[Drawer.ID.CHATLIST],
+        }))
+    )
+
+    useEffect(() => {
+        return () => {
+            unloadCharacter()
+            unloadChat()
+        }
+    }, [])
+
+    const handleCreateChat = async () => {
+        if (!charId) return
+
+        const newChatId = await Chats.db.mutate.createChat(charId)
+        if (!newChatId) return
+
+        const adventureId = chat?.id ? await getAdventureIdByChatId(chat.id) : null
+        if (adventureId) {
+            await ensureAdventureChatLink(
+                adventureId,
+                newChatId,
+                Characters.useUserStore.getState().id ?? null
+            )
+        }
+
+        await loadChat(newChatId)
+    }
+
+    return (
+        <Drawer.Gesture
+            config={[
+                {
+                    drawerID: Drawer.ID.CHATLIST,
+                    openDirection: 'left',
+                    closeDirection: 'right',
+                },
+                {
+                    drawerID: Drawer.ID.SETTINGS,
+                    openDirection: 'right',
+                    closeDirection: 'left',
+                },
+            ]}>
+            <View style={{ flex: 1 }}>
+                <HeaderTitle />
+                <HeaderButton
+                    headerLeft={() => !showChats && <Drawer.Button drawerID={Drawer.ID.SETTINGS} />}
+                    headerRight={() =>
+                        !showSettings && (
+                            <>
+                                {!showChats && (
+                                    <>
+                                        <ThemedButton
+                                            icon={
+                                                <AntDesign
+                                                    name={chatTopFade ? 'eye' : 'eyeo'}
+                                                    size={20}
+                                                    color={
+                                                        chatTopFade
+                                                            ? color.primary._500
+                                                            : color.text._300
+                                                    }
+                                                />
+                                            }
+                                            variant="tertiary"
+                                            buttonStyle={{
+                                                marginRight: 8,
+                                                width: 36,
+                                                height: 36,
+                                                paddingHorizontal: 0,
+                                                paddingVertical: 0,
+                                                borderWidth: 0,
+                                            }}
+                                            onPress={() => setChatTopFade(!chatTopFade)}
+                                        />
+                                        <ThemedButton
+                                            buttonStyle={{
+                                                marginRight: 16,
+                                            }}
+                                            iconName="plus"
+                                            variant="tertiary"
+                                            iconSize={24}
+                                            onPress={handleCreateChat}
+                                        />
+                                    </>
+                                )}
+                                <Drawer.Button drawerID={Drawer.ID.CHATLIST} openIcon="message1" />
+                            </>
+                        )
+                    }
+                />
+                <KeyboardAvoidingView
+                    enabled={!editorVisible}
+                    keyboardVerticalOffset={insets.bottom + heightOffset}
+                    behavior="translate-with-padding"
+                    style={{ flex: 1, paddingBottom: insets.bottom }}>
+                    {chat && <ChatWindow />}
+                    <ChatInput />
+                    <AvatarViewer />
+                </KeyboardAvoidingView>
+                {/**Drawer has to be outside of the KeyboardAvoidingView */}
+                <SettingsDrawer useInset />
+                <ChatsDrawer />
+            </View>
+        </Drawer.Gesture>
+    )
+}
+
+export default ChatMenu

@@ -1,0 +1,26 @@
+diff --git a/node_modules/react-native-keyboard-controller/android/src/main/jni/CMakeLists.txt b/node_modules/react-native-keyboard-controller/android/src/main/jni/CMakeLists.txt
+index 22b6198..47b44ea 100644
+--- a/node_modules/react-native-keyboard-controller/android/src/main/jni/CMakeLists.txt
++++ b/node_modules/react-native-keyboard-controller/android/src/main/jni/CMakeLists.txt
+@@ -8,6 +8,21 @@ set(LIB_COMMON_DIR ${LIB_ANDROID_DIR}/../common/cpp)
+ set(LIB_COMMON_COMPONENTS_DIR ${LIB_COMMON_DIR}/react/renderer/components/${LIB_LITERAL})
+ set(LIB_ANDROID_GENERATED_JNI_DIR ${LIB_ANDROID_DIR}/build/generated/source/codegen/jni)
+ set(LIB_ANDROID_GENERATED_COMPONENTS_DIR ${LIB_ANDROID_GENERATED_JNI_DIR}/react/renderer/components/${LIB_LITERAL})
++
++if(CMAKE_HOST_WIN32)
++  # Mirror sources into a short build-local path so Ninja object filenames stay under MAX_PATH.
++  set(LIB_SHORT_ROOT ${CMAKE_CURRENT_BINARY_DIR}/s)
++
++  file(REMOVE_RECURSE ${LIB_SHORT_ROOT})
++  file(MAKE_DIRECTORY ${LIB_SHORT_ROOT})
++  file(COPY ${LIB_COMMON_DIR}/ DESTINATION ${LIB_SHORT_ROOT}/c)
++  file(COPY ${LIB_ANDROID_GENERATED_JNI_DIR}/ DESTINATION ${LIB_SHORT_ROOT}/g)
++
++  set(LIB_COMMON_DIR ${LIB_SHORT_ROOT}/c)
++  set(LIB_COMMON_COMPONENTS_DIR ${LIB_COMMON_DIR}/react/renderer/components/${LIB_LITERAL})
++  set(LIB_ANDROID_GENERATED_JNI_DIR ${LIB_SHORT_ROOT}/g)
++  set(LIB_ANDROID_GENERATED_COMPONENTS_DIR ${LIB_ANDROID_GENERATED_JNI_DIR}/react/renderer/components/${LIB_LITERAL})
++endif()
+ 
+ add_compile_options(
+   -fexceptions
