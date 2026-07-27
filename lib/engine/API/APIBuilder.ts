@@ -6,6 +6,7 @@ import { nativeApplicationVersion } from 'expo-application'
 import { mmkv } from '@lib/storage/MMKV'
 import { buildContext, ContextBuilderParams } from './ContextBuilder'
 import type { Message } from './ContextBuilder'
+import { sendCodexResponse } from './CodexResponses'
 import { buildRequest, RequestBuilderParams } from './RequestBuilder'
 
 export interface APIBuilderParams
@@ -64,6 +65,29 @@ export const buildAndSendRequest = async ({
             Logger.errorToast(`Prompt construction failed`)
             stopGenerating()
             return
+        }
+
+        if (apiConfig.request.requestType === 'codex') {
+            if (!Array.isArray(prompt)) {
+                Logger.errorToast('Codex 仅支持聊天补全上下文')
+                stopGenerating()
+                return
+            }
+
+            const model = apiValues.model?.[apiConfig.model.nameParser]
+            if (typeof model !== 'string' || !model) {
+                Logger.errorToast('未选择 Codex 模型')
+                stopGenerating()
+                return
+            }
+
+            return sendCodexResponse({
+                model,
+                prompt,
+                onData,
+                onEnd,
+                stopGenerating,
+            })
         }
 
         payload = await buildRequest({

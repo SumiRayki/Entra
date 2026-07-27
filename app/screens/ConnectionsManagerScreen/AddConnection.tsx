@@ -4,8 +4,8 @@ import DropdownSheet from '@components/input/DropdownSheet'
 import MultiDropdownSheet from '@components/input/MultiDropdownSheet'
 import ThemedTextInput from '@components/input/ThemedTextInput'
 import { CLAUDE_VERSION } from '@lib/constants/GlobalValues'
-import { minimaxModelFallbacks } from '@lib/engine/API/DefaultAPI'
 import { APIManagerValue, APIManager } from '@lib/engine/API/APIManagerState'
+import { codexModelFallbacks, minimaxModelFallbacks } from '@lib/engine/API/DefaultAPI'
 import { Logger } from '@lib/state/Logger'
 import { Theme } from '@lib/theme/ThemeManager'
 import { Stack, useRouter } from 'expo-router'
@@ -14,6 +14,8 @@ import { StyleSheet, Text, View } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useShallow } from 'zustand/react/shallow'
+
+import CodexAuthSection from './CodexAuthSection'
 
 const AddConnection = () => {
     const styles = useStyles()
@@ -38,6 +40,10 @@ const AddConnection = () => {
         if (!template.features.useModel) return
         if (template.name === 'MiniMax') {
             setModelList(minimaxModelFallbacks)
+            return
+        }
+        if (template.request.requestType === 'codex') {
+            setModelList(codexModelFallbacks)
             return
         }
 
@@ -165,6 +171,8 @@ const AddConnection = () => {
                     />
                 )}
 
+                {template.request.requestType === 'codex' && <CodexAuthSection />}
+
                 {template.features.useModel && (
                     <View>
                         <Text style={styles.title}>模型</Text>
@@ -205,14 +213,16 @@ const AddConnection = () => {
                                     modalTitle="选择模型"
                                 />
                             )}
-                            <ThemedButton
-                                onPress={() => {
-                                    handleGetModelList()
-                                }}
-                                iconName="reload1"
-                                iconSize={18}
-                                variant="secondary"
-                            />
+                            {template.request.requestType !== 'codex' && (
+                                <ThemedButton
+                                    onPress={() => {
+                                        handleGetModelList()
+                                    }}
+                                    iconName="reload1"
+                                    iconSize={18}
+                                    variant="secondary"
+                                />
+                            )}
                         </View>
                     </View>
                 )}

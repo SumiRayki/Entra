@@ -12,6 +12,13 @@ export const minimaxModelFallbacks = [
     { id: 'MiniMax-M2' },
 ]
 
+export const codexModelFallbacks = [
+    { id: 'gpt-5.5' },
+    { id: 'gpt-5.4' },
+    { id: 'gpt-5.4-mini' },
+    { id: 'gpt-5.3-codex-spark' },
+]
+
 export const defaultTemplates: APIConfiguration[] = [
     // OPENAI
     {
@@ -85,6 +92,67 @@ export const defaultTemplates: APIConfiguration[] = [
             editableCompletionPath: false,
             editableModelPath: false,
             selectableModel: false,
+        },
+    },
+    // ChatGPT Codex OAuth
+    {
+        version: 1,
+        name: 'ChatGPT (Codex)',
+
+        defaultValues: {
+            endpoint: 'https://chatgpt.com/backend-api/codex/responses',
+            modelEndpoint: '',
+            prefill: '',
+            firstMessage: '',
+            key: '',
+            model: codexModelFallbacks[0],
+        },
+
+        features: {
+            usePrefill: false,
+            useFirstMessage: false,
+            useKey: false,
+            useModel: true,
+            multipleModels: false,
+        },
+
+        request: {
+            requestType: 'codex',
+            samplerFields: [
+                { externalName: 'max_context_length', samplerID: SamplerID.CONTEXT_LENGTH },
+            ],
+            completionType: {
+                type: 'chatCompletions',
+                userRole: 'user',
+                systemRole: 'system',
+                assistantRole: 'assistant',
+                contentName: 'content',
+                supportsImages: true,
+            },
+            authHeader: 'Authorization',
+            authPrefix: 'Bearer ',
+            responseParsePattern: '',
+            useStop: false,
+            stopKey: 'stop',
+            promptKey: 'input',
+            removeLength: true,
+        },
+
+        payload: {
+            type: 'openai',
+        },
+
+        model: {
+            useModelContextLength: false,
+            nameParser: 'id',
+            contextSizeParser: '',
+            modelListParser: '',
+        },
+
+        ui: {
+            editableCompletionPath: false,
+            editableModelPath: false,
+            selectableModel: true,
         },
     },
     // MiniMax

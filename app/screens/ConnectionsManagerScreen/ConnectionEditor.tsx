@@ -5,9 +5,9 @@ import MultiDropdownSheet from '@components/input/MultiDropdownSheet'
 import ThemedTextInput from '@components/input/ThemedTextInput'
 import FadeBackrop from '@components/views/FadeBackdrop'
 import { CLAUDE_VERSION } from '@lib/constants/GlobalValues'
-import { minimaxModelFallbacks } from '@lib/engine/API/DefaultAPI'
 import { APIConfiguration } from '@lib/engine/API/APIBuilder.types'
 import { APIManagerValue, APIManager } from '@lib/engine/API/APIManagerState'
+import { codexModelFallbacks, minimaxModelFallbacks } from '@lib/engine/API/DefaultAPI'
 import { Logger } from '@lib/state/Logger'
 import { Theme } from '@lib/theme/ThemeManager'
 import { useEffect, useState } from 'react'
@@ -15,6 +15,8 @@ import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native'
 import Animated, { FadeIn, SlideOutDown } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useShallow } from 'zustand/react/shallow'
+
+import CodexAuthSection from './CodexAuthSection'
 
 type ConnectionEditorProps = {
     index: number
@@ -63,6 +65,10 @@ const ConnectionEditor: React.FC<ConnectionEditorProps> = ({
         if (!template.features.useModel || !show) return
         if (template.name === 'MiniMax') {
             setModelList(minimaxModelFallbacks)
+            return
+        }
+        if (template.request.requestType === 'codex') {
+            setModelList(codexModelFallbacks)
             return
         }
         const auth: any = {}
@@ -185,6 +191,8 @@ const ConnectionEditor: React.FC<ConnectionEditorProps> = ({
                         />
                     )}
 
+                    {template.request.requestType === 'codex' && <CodexAuthSection />}
+
                     {template.features.useModel && (
                         <View style={{ rowGap: 4 }}>
                             <Text style={styles.title}>模型</Text>
@@ -198,14 +206,22 @@ const ConnectionEditor: React.FC<ConnectionEditorProps> = ({
                                     <DropdownSheet
                                         containerStyle={{ flex: 1 }}
                                         selected={values.model}
-                                        data={modelList}
+                                        data={
+                                            template.request.requestType === 'codex'
+                                                ? codexModelFallbacks
+                                                : modelList
+                                        }
                                         labelExtractor={(value) => {
                                             return getNestedValue(value, template.model.nameParser)
                                         }}
                                         onChangeValue={(item) => {
                                             setValues({ ...values, model: item })
                                         }}
-                                        search={modelList.length > 10}
+                                        search={
+                                            template.request.requestType === 'codex'
+                                                ? false
+                                                : modelList.length > 10
+                                        }
                                         modalTitle="选择模型"
                                     />
                                 )}
@@ -224,14 +240,16 @@ const ConnectionEditor: React.FC<ConnectionEditorProps> = ({
                                         modalTitle="选择模型"
                                     />
                                 )}
-                                <ThemedButton
-                                    onPress={() => {
-                                        handleGetModelList()
-                                    }}
-                                    iconName="reload1"
-                                    iconSize={18}
-                                    variant="secondary"
-                                />
+                                {template.request.requestType !== 'codex' && (
+                                    <ThemedButton
+                                        onPress={() => {
+                                            handleGetModelList()
+                                        }}
+                                        iconName="reload1"
+                                        iconSize={18}
+                                        variant="secondary"
+                                    />
+                                )}
                             </View>
                         </View>
                     )}

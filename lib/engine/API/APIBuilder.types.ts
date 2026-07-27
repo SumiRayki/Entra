@@ -36,7 +36,7 @@ export interface APIFeatures {
 
 export interface APIRequestFormat {
     // horde requires a special response format
-    requestType: 'stream' | 'horde'
+    requestType: 'stream' | 'horde' | 'codex'
     // refer to SamplerData.ts
     samplerFields: APISampler[]
     // whether or not a stop sequence is used
