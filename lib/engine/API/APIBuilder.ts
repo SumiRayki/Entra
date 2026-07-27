@@ -5,6 +5,7 @@ import { nativeApplicationVersion } from 'expo-application'
 
 import { mmkv } from '@lib/storage/MMKV'
 import { buildContext, ContextBuilderParams } from './ContextBuilder'
+import type { Message } from './ContextBuilder'
 import { buildRequest, RequestBuilderParams } from './RequestBuilder'
 
 export interface APIBuilderParams
@@ -14,6 +15,7 @@ export interface APIBuilderParams
     onEnd: (data: string) => void
     stopSequence: string[]
     stopGenerating: () => void
+    promptOverride?: string | Message[]
 }
 
 export const buildAndSendRequest = async ({
@@ -33,24 +35,31 @@ export const buildAndSendRequest = async ({
     messageLoader,
     maxLength,
     cache,
+    contextSummary,
+    contextSummaryEndOrder,
+    promptOverride,
 }: APIBuilderParams) => {
     try {
         let payload: any = undefined
         const bypassContextLength = mmkv.getBoolean(AppSettings.BypassContextLength)
-        const prompt = await buildContext({
-            apiConfig,
-            apiValues,
-            instruct,
-            character,
-            user,
-            messages,
-            chatTokenizer,
-            tokenizer,
-            messageLoader,
-            maxLength,
-            cache,
-            bypassContextLength,
-        })
+        const prompt =
+            promptOverride ??
+            (await buildContext({
+                apiConfig,
+                apiValues,
+                instruct,
+                character,
+                user,
+                messages,
+                chatTokenizer,
+                tokenizer,
+                messageLoader,
+                maxLength,
+                cache,
+                bypassContextLength,
+                contextSummary,
+                contextSummaryEndOrder,
+            }))
         if (prompt === undefined) {
             Logger.errorToast(`Prompt construction failed`)
             stopGenerating()
@@ -93,22 +102,51 @@ export const buildAndSendRequest = async ({
             apiConfig.request.requestType === 'stream' ? readableStreamResponse : hordeResponse
 
         const replaceStrings = constructReplaceStrings(stopSequence)
+        let reasoningOpen = false
+
+        const closeReasoning = () => {
+            if (!reasoningOpen) return
+            onData('</think>')
+            reasoningOpen = false
+        }
 
         return sendFunc({
             endpoint: apiValues.endpoint,
             payload: payload,
             onEvent: (event) => {
                 try {
+                    const parsedEvent = typeof event === 'string' ? JSON.parse(event) : event
+                    const reasoning = extractReasoningText(
+                        apiConfig.request.reasoningParsePattern
+                            ? getNestedValue(
+                                  parsedEvent,
+                                  apiConfig.request.reasoningParsePattern
+                              )
+                            : null
+                    )
                     const data = getNestedValue(
-                        typeof event === 'string' ? JSON.parse(event) : event,
+                        parsedEvent,
                         apiConfig.request.responseParsePattern
                     )
-                    const text = data.replaceAll(replaceStrings, '')
 
-                    onData(text)
+                    if (reasoning.length > 0) {
+                        if (!reasoningOpen) {
+                            onData('<think>')
+                            reasoningOpen = true
+                        }
+                        onData(reasoning)
+                    }
+
+                    if (typeof data === 'string' && data.length > 0) {
+                        closeReasoning()
+                        onData(data.replaceAll(replaceStrings, ''))
+                    }
                 } catch (e) {}
             },
-            onEnd: onEnd,
+            onEnd: (data) => {
+                closeReasoning()
+                onEnd(data)
+            },
             header: header,
             stopGenerating: stopGenerating,
         })
@@ -262,14 +300,33 @@ const readableStreamResponse = async (senderParams: SenderParams) => {
 }
 
 const constructReplaceStrings = (stopSequence: string[]) => {
-    const replace = RegExp(
+    return RegExp(
         stopSequence.map((item) => item.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join(`|`),
         'g'
     )
 }
 
-const getNestedValue = (obj: any, path: string) => {
-    const keys = path.split('.')
-    const value = keys.reduce((acc, key) => acc?.[key], obj)
-    return value ?? null
+const getNestedValue = (obj: any, path: string | string[]) => {
+    const paths = Array.isArray(path) ? path : [path]
+
+    for (const currentPath of paths) {
+        const keys = currentPath.split('.')
+        const value = keys.reduce((acc, key) => acc?.[key], obj)
+        if (value !== undefined && value !== null && value !== '') return value
+    }
+
+    return null
+}
+
+const extractReasoningText = (value: any): string => {
+    if (typeof value === 'string') return value
+    if (!Array.isArray(value)) return ''
+
+    return value
+        .map((item) => {
+            if (typeof item?.text === 'string') return item.text
+            if (typeof item?.summary === 'string') return item.summary
+            return ''
+        })
+        .join('')
 }

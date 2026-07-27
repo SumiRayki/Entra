@@ -3,9 +3,12 @@ import AnimatedEllipsis from '@components/text/AnimatedEllipsis'
 import { useTextFilter } from '@lib/hooks/TextFilter'
 import { MarkdownStyle } from '@lib/markdown/Markdown'
 import { Chats, useInference } from '@lib/state/Chat'
+import { parseReasoningText } from '@lib/utils/Reasoning'
 import { useEffect, useRef, useState } from 'react'
 import { View, Animated, Easing, useAnimatedValue } from 'react-native'
 import Markdown from 'react-native-markdown-display'
+
+import ChatReasoning from './ChatReasoning'
 
 type ChatTextProps = {
     nowGenerating: boolean
@@ -55,15 +58,22 @@ const ChatTextLast: React.FC<ChatTextProps> = ({ nowGenerating, index }) => {
         if (!nowGenerating && !firstRender.current) setTimeout(() => updateHeight(), 400)
     }, [nowGenerating])
 
-    const filteredText = useTextFilter(swipeText?.trim() ?? '')
-    const renderedText = showHidden ? swipeText?.trim() : filteredText.result
     const isStreaming = nowGenerating && swipeId === currentSwipeId
+    const rawText = isStreaming ? buffer.data : (swipeText?.trim() ?? '')
+    const reasoningParts = parseReasoningText(rawText)
+    const filteredText = useTextFilter(reasoningParts.content)
+    const renderedText = showHidden ? reasoningParts.content : filteredText.result
 
     const content = (
         <>
+            <ChatReasoning
+                reasoning={reasoningParts.reasoning}
+                hasReasoning={reasoningParts.hasReasoning}
+                isThinking={isStreaming && reasoningParts.isThinking}
+            />
             {isStreaming && buffer.data === '' && <AnimatedEllipsis />}
             <Markdown mergeStyle={false} markdownit={markdown} rules={rules} style={style}>
-                {isStreaming ? buffer.data.trim() : renderedText}
+                {renderedText}
             </Markdown>
             {filteredText.found && (
                 <View style={{ flexDirection: 'row' }}>

@@ -62,6 +62,8 @@ export interface APIRequestFormat {
     authPrefix: 'Bearer ' | string
     // how we get data out of the response stream, eg data.content.delta.text
     responseParsePattern: string
+    // optional paths used by reasoning models for their thinking stream
+    reasoningParsePattern?: string | string[]
     // whether or not to remove the max_length field
     removeLength: boolean
     // some APIs like Cohere do not allow negative seed values

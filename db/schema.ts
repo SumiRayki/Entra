@@ -118,6 +118,10 @@ export const chats = sqliteTable('chats', {
         .$onUpdateFn(() => Date.now()),
     name: text('name').notNull().default('New Chat'),
     scroll_offset: integer('scroll_offset', { mode: 'number' }).notNull().default(0),
+    context_summary: text('context_summary').notNull().default(''),
+    context_summary_end_order: integer('context_summary_end_order', { mode: 'number' })
+        .notNull()
+        .default(-1),
 })
 
 export const chatEntries = sqliteTable('chat_entries', {

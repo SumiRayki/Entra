@@ -2,9 +2,12 @@ import ThemedButton from '@components/buttons/ThemedButton'
 import { useTextFilter } from '@lib/hooks/TextFilter'
 import { MarkdownStyle } from '@lib/markdown/Markdown'
 import { Chats } from '@lib/state/Chat'
+import { parseReasoningText } from '@lib/utils/Reasoning'
 import React, { useRef, useState } from 'react'
 import { Animated, Easing, useAnimatedValue, View } from 'react-native'
 import Markdown from 'react-native-markdown-display'
+
+import ChatReasoning from './ChatReasoning'
 
 type ChatTextProps = {
     nowGenerating: boolean
@@ -43,11 +46,17 @@ const ChatText: React.FC<ChatTextProps> = ({ nowGenerating, index }) => {
         }
     }
 
-    const filteredText = useTextFilter(swipeText?.trim() ?? '')
-    const renderedText = showHidden ? swipeText?.trim() : filteredText.result
+    const reasoningParts = parseReasoningText(swipeText?.trim() ?? '')
+    const filteredText = useTextFilter(reasoningParts.content)
+    const renderedText = showHidden ? reasoningParts.content : filteredText.result
     return (
         <Animated.View style={{ overflow: 'scroll', height: animHeight }}>
             <View style={{ minHeight: 10 }} ref={viewRef} onLayout={() => updateHeight()}>
+                <ChatReasoning
+                    reasoning={reasoningParts.reasoning}
+                    hasReasoning={reasoningParts.hasReasoning}
+                    isThinking={false}
+                />
                 <Markdown mergeStyle={false} markdownit={markdown} rules={rules} style={style}>
                     {renderedText}
                 </Markdown>

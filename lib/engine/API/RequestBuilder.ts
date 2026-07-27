@@ -94,13 +94,14 @@ const cohereRequest = async (
 
     const [preamble, ...history] = promptData
     const last = history.pop()
+    const contentName = config.request.completionType.contentName
     return {
         ...payloadFields,
         ...stop,
         ...model,
-        preamble: preamble.message,
+        preamble: preamble[contentName],
         chat_history: history,
-        [config.request.promptKey]: last?.message ?? '',
+        [config.request.promptKey]: last?.[contentName] ?? '',
     }
 }
 

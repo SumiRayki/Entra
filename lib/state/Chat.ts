@@ -86,6 +86,8 @@ export interface ChatState {
     ) => Promise<void>
     deleteEntry: (index: number) => Promise<void>
     renameChat: (chatId: number, name: string) => void
+    setContextSummary: (summary: string, endOrder: number) => Promise<void>
+    invalidateContextSummary: (entryOrder: number) => Promise<void>
     // swipe data
     swipe: (index: number, direction: number) => Promise<boolean>
     addSwipe: (index: number, message?: string) => Promise<number | void>
@@ -262,6 +264,7 @@ export namespace Chats {
             const entryId = messages[index].id
             if (!entryId) return
 
+            await get().invalidateContextSummary(messages[index].order)
             await db.mutate.deleteChatEntry(entryId)
 
             set((state) => {
@@ -280,6 +283,7 @@ export namespace Chats {
             const { verifySwipeId, updateFinished, updateStarted, timings, resetTimings } = options
             const messages = get()?.data?.messages
             if (!messages) return
+            await get().invalidateContextSummary(messages[index].order)
 
             let chatSwipeId: number | undefined =
                 messages[index]?.swipes[messages[index].swipe_id].id
@@ -335,6 +339,7 @@ export namespace Chats {
 
             if (target < 0) return false
             if (target > limit) return true
+            await get().invalidateContextSummary(messages[index].order)
             messages[index].swipe_id = target
             messages[index] = { ...messages[index] }
             set((state) => {
@@ -357,6 +362,7 @@ export namespace Chats {
             if (!messages) return
             const entryId = messages[index].id
 
+            await get().invalidateContextSummary(messages[index].order)
             const swipe = await db.mutate.createSwipe(entryId, message)
             if (swipe) messages[index].swipes.push(swipe)
             await db.mutate.updateEntrySwipeId(entryId, messages[index].swipes.length - 1)
@@ -474,6 +480,7 @@ export namespace Chats {
             const messages = get()?.data?.messages
             const message = messages?.[index]
             if (!messages || !message) return
+            await get().invalidateContextSummary(message.order)
             await db.mutate.deleteAttachment(attachmentId)
             message.attachments = message.attachments.filter((item) => item.id !== attachmentId)
             messages[index] = message
@@ -490,6 +497,31 @@ export namespace Chats {
                     data: { ...data, name: name },
                 })
             db.mutate.renameChat(chatId, name)
+        },
+        setContextSummary: async (summary: string, endOrder: number) => {
+            const data = get().data
+            if (!data) return
+
+            await db.mutate.updateContextSummary(data.id, summary, endOrder)
+            set({
+                data: {
+                    ...data,
+                    context_summary: summary,
+                    context_summary_end_order: endOrder,
+                },
+            })
+        },
+        invalidateContextSummary: async (entryOrder: number) => {
+            const data = get().data
+            if (
+                !data ||
+                !data.context_summary ||
+                entryOrder > data.context_summary_end_order
+            ) {
+                return
+            }
+
+            await get().setContextSummary('', -1)
         },
     }))
 
@@ -798,6 +830,20 @@ export namespace Chats {
 
             export const renameChat = async (chatId: number, name: string) => {
                 await database.update(chats).set({ name: name }).where(eq(chats.id, chatId))
+            }
+
+            export const updateContextSummary = async (
+                chatId: number,
+                summary: string,
+                endOrder: number
+            ) => {
+                await database
+                    .update(chats)
+                    .set({
+                        context_summary: summary,
+                        context_summary_end_order: endOrder,
+                    })
+                    .where(eq(chats.id, chatId))
             }
 
             export const updateUser = async (chatId: number, userId: number) => {
