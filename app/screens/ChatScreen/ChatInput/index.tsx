@@ -6,6 +6,7 @@ import { AppSettings } from '@lib/constants/GlobalValues'
 import { generateResponse } from '@lib/engine/Inference'
 import { useUnfocusTextInput } from '@lib/hooks/UnfocusTextInput'
 import { Characters } from '@lib/state/Characters'
+import { getStoryIdFromCreatorNotes } from '@lib/state/Story'
 import { Chats, useInference } from '@lib/state/Chat'
 import { Logger } from '@lib/state/Logger'
 import { Theme } from '@lib/theme/ThemeManager'
@@ -61,11 +62,13 @@ const ChatInput = () => {
     )
     const setHeight = useInputHeightStore(useShallow((state) => state.setHeight))
 
-    const { charName } = Characters.useCharacterStore(
+    const { charName, creatorNotes } = Characters.useCharacterStore(
         useShallow((state) => ({
             charName: state?.card?.name,
+            creatorNotes: state.card?.creator_notes,
         }))
     )
+    const isStory = getStoryIdFromCreatorNotes(creatorNotes) !== null
 
     const { userName } = Characters.useUserStore(
         useShallow((state) => ({ userName: state.card?.name }))
@@ -259,7 +262,7 @@ const ChatInput = () => {
                         setHideOptions(!!newMessage)
                     }}
                     numberOfLines={6}
-                    placeholder="输入消息..."
+                    placeholder={isStory ? '写下这一段的方向' : '输入消息...'}
                     placeholderTextColor={color.text._700}
                     value={newMessage}
                     onChangeText={(text) => {

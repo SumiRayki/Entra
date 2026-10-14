@@ -6,7 +6,7 @@ import { Characters, CharInfo } from '@lib/state/Characters'
 const SYSTEM_MARKER = Characters.SYSTEM_CARD_MARKER
 import { TagHider } from '@lib/state/TagHider'
 import { db as database } from '@db'
-import { adventures } from 'db/schema'
+import { adventures, stories } from 'db/schema'
 import { desc } from 'drizzle-orm'
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { useState } from 'react'
@@ -20,10 +20,11 @@ import CharacterNewMenu from './CharacterNewMenu'
 import CharactersEmpty from './CharactersEmpty'
 import CharactersSearchEmpty from './CharactersSearchEmpty'
 import AdventureListing from './AdventureListing'
+import StoryListing from './StoryListing'
 
 const PAGE_SIZE = 30
 
-type ListTab = 'characters' | 'adventures'
+type ListTab = 'characters' | 'adventures' | 'stories'
 
 const CharacterList: React.FC = () => {
     const [nowLoading, setNowLoading] = useState(false)
@@ -69,6 +70,11 @@ const CharacterList: React.FC = () => {
     const { data: adventureData } = useLiveQuery(
         database.query.adventures.findMany({
             orderBy: desc(adventures.last_modified),
+        })
+    )
+    const { data: storyData } = useLiveQuery(
+        database.query.stories.findMany({
+            orderBy: desc(stories.last_modified),
         })
     )
 
@@ -127,7 +133,7 @@ const CharacterList: React.FC = () => {
                             <CharactersSearchEmpty />
                         )}
                     </>
-                ) : (
+                ) : activeTab === 'adventures' ? (
                     <Animated.FlatList
                         layout={LinearTransition}
                         showsVerticalScrollIndicator={false}
@@ -151,6 +157,34 @@ const CharacterList: React.FC = () => {
                                 }}>
                                 <Text style={{ color: color.text._500, fontSize: 16 }}>
                                     暂无游戏，请通过角色创建大师或右上角菜单创建
+                                </Text>
+                            </View>
+                        )}
+                    />
+                ) : (
+                    <Animated.FlatList
+                        layout={LinearTransition}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={{ rowGap: 8 }}
+                        data={storyData ?? []}
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={({ item }) => (
+                            <StoryListing
+                                story={item}
+                                nowLoading={nowLoading}
+                                setNowLoading={setNowLoading}
+                            />
+                        )}
+                        ListEmptyComponent={() => (
+                            <View
+                                style={{
+                                    flex: 1,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    paddingTop: 60,
+                                }}>
+                                <Text style={{ color: color.text._500, fontSize: 16 }}>
+                                    暂无故事，请通过角色创建大师或右上角菜单创建
                                 </Text>
                             </View>
                         )}

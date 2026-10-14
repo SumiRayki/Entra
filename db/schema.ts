@@ -391,6 +391,60 @@ export const adventureChatsRelations = relations(adventureChats, ({ one }) => ({
     }),
 }))
 
+export const stories = sqliteTable('stories', {
+    id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+    name: text('name').notNull().default('新故事'),
+    description: text('description').notNull().default(''),
+    world_setting: text('world_setting').notNull().default(''),
+    background: text('background').notNull().default(''),
+    image_id: integer('image_id', { mode: 'number' }).$defaultFn(() => Date.now()),
+    last_modified: integer('last_modified', { mode: 'number' })
+        .$defaultFn(() => Date.now())
+        .$onUpdateFn(() => Date.now()),
+})
+
+export const storyCharacters = sqliteTable('story_characters', {
+    id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+    story_id: integer('story_id', { mode: 'number' })
+        .notNull()
+        .references(() => stories.id, { onDelete: 'cascade' }),
+    name: text('name').notNull().default(''),
+    brief_description: text('brief_description').notNull().default(''),
+})
+
+export const storyChats = sqliteTable('story_chats', {
+    id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+    story_id: integer('story_id', { mode: 'number' })
+        .notNull()
+        .references(() => stories.id, { onDelete: 'cascade' }),
+    chat_id: integer('chat_id', { mode: 'number' })
+        .notNull()
+        .references(() => chats.id, { onDelete: 'cascade' }),
+})
+
+export const storiesRelations = relations(stories, ({ many }) => ({
+    characters: many(storyCharacters),
+    chats: many(storyChats),
+}))
+
+export const storyCharactersRelations = relations(storyCharacters, ({ one }) => ({
+    story: one(stories, {
+        fields: [storyCharacters.story_id],
+        references: [stories.id],
+    }),
+}))
+
+export const storyChatsRelations = relations(storyChats, ({ one }) => ({
+    story: one(stories, {
+        fields: [storyChats.story_id],
+        references: [stories.id],
+    }),
+    chat: one(chats, {
+        fields: [storyChats.chat_id],
+        references: [chats.id],
+    }),
+}))
+
 // TODO:
 
 ////// group chats - 2 tables

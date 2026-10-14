@@ -17,7 +17,7 @@ import Animated, { FadeInUp, FadeOutUp, LinearTransition } from 'react-native-re
 
 import { Logger } from '@lib/state/Logger'
 
-type ListTab = 'characters' | 'adventures'
+type ListTab = 'characters' | 'adventures' | 'stories'
 
 type CharacterListHeaderProps = {
     resultLength: number
@@ -64,7 +64,7 @@ const CharacterListHeader: React.FC<CharacterListHeaderProps> = ({
     )
 
     const tabStyle = (active: boolean) => ({
-        paddingHorizontal: spacing.xl,
+        paddingHorizontal: spacing.l,
         paddingVertical: spacing.m,
         backgroundColor: active ? color.primary._300 : color.neutral._200,
         borderRadius: borderRadius.xl,
@@ -100,6 +100,11 @@ const CharacterListHeader: React.FC<CharacterListHeaderProps> = ({
                         style={tabStyle(activeTab === 'adventures')}
                         onPress={() => onTabChange('adventures')}>
                         <Text style={tabTextStyle(activeTab === 'adventures')}>游戏</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={tabStyle(activeTab === 'stories')}
+                        onPress={() => onTabChange('stories')}>
+                        <Text style={tabTextStyle(activeTab === 'stories')}>故事</Text>
                     </TouchableOpacity>
                 </View>
                 {activeTab === 'characters' && (

@@ -2,6 +2,7 @@ import Alert from '@components/views/Alert'
 import PopupMenu, { MenuRef } from '@components/views/PopupMenu'
 import TextBoxModal from '@components/views/TextBoxModal'
 import { ensureAdventureChatLink, getAdventureIdByChatId } from '@lib/state/Adventure'
+import { ensureStoryChatLink, getStoryIdByChatId } from '@lib/state/Story'
 import { Characters } from '@lib/state/Characters'
 import { Chats } from '@lib/state/Chat'
 import { Logger } from '@lib/state/Logger'
@@ -43,6 +44,7 @@ const ChatEditPopup: React.FC<ChatEditPopupProps> = ({ item }) => {
                     label: '删除对话',
                     onPress: async () => {
                         const adventureId = await getAdventureIdByChatId(item.id)
+                        const storyId = await getStoryIdByChatId(item.id)
                         await deleteChat(item.id)
                         if (charId && chatId === item.id) {
                             const returnedChatId = await Chats.db.query.chatNewestId(charId)
@@ -55,6 +57,9 @@ const ChatEditPopup: React.FC<ChatEditPopupProps> = ({ item }) => {
                                     chatId,
                                     item.user_id ?? null
                                 )
+                            }
+                            if (storyId && chatId) {
+                                await ensureStoryChatLink(storyId, chatId)
                             }
                             chatId && (await loadChat(chatId))
                         } else if (item.id === chatId) {
@@ -79,15 +84,21 @@ const ChatEditPopup: React.FC<ChatEditPopupProps> = ({ item }) => {
                     label: '克隆对话',
                     onPress: async () => {
                         const adventureId = await getAdventureIdByChatId(item.id)
+                        const storyId = await getStoryIdByChatId(item.id)
                         await Chats.db.mutate.cloneChat(item.id)
-                        if (adventureId) {
+                        if (adventureId || storyId) {
                             const clonedChatId = await Chats.db.query.chatNewestId(item.character_id)
                             if (clonedChatId && clonedChatId !== item.id) {
-                                await ensureAdventureChatLink(
-                                    adventureId,
-                                    clonedChatId,
-                                    item.user_id ?? null
-                                )
+                                if (adventureId) {
+                                    await ensureAdventureChatLink(
+                                        adventureId,
+                                        clonedChatId,
+                                        item.user_id ?? null
+                                    )
+                                }
+                                if (storyId) {
+                                    await ensureStoryChatLink(storyId, clonedChatId)
+                                }
                             }
                         }
                         menuRef.current?.close()

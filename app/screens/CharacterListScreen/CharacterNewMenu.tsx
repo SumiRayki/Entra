@@ -3,6 +3,7 @@ import TextBoxModal from '@components/views/TextBoxModal'
 import { Characters } from '@lib/state/Characters'
 import { Logger } from '@lib/state/Logger'
 import { setCurrentAdventureId } from '@screens/AdventureEditorScreen'
+import { setCurrentStoryId } from '@screens/StoryEditorScreen'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
@@ -42,6 +43,11 @@ const CharacterNewMenu: React.FC<CharacterNewMenuProps> = ({ nowLoading, setNowL
         router.push('/screens/AdventureEditorScreen')
     }
 
+    const handleCreateStory = () => {
+        setCurrentStoryId(null)
+        router.push('/screens/StoryEditorScreen')
+    }
+
     return (
         <>
             <TextBoxModal
@@ -77,6 +83,14 @@ const CharacterNewMenu: React.FC<CharacterNewMenuProps> = ({ nowLoading, setNowL
                             handleCreateAdventure()
                         },
                         icon: 'rocket1',
+                    },
+                    {
+                        label: '创建故事',
+                        onPress: (menu) => {
+                            menu.current?.close()
+                            handleCreateStory()
+                        },
+                        icon: 'book',
                     },
                 ]}
                 placement="bottom"

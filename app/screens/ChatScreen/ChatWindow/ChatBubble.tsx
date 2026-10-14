@@ -8,23 +8,58 @@ import { Pressable, Text, View } from 'react-native'
 import { useMMKVBoolean } from 'react-native-mmkv'
 import { useShallow } from 'zustand/react/shallow'
 import { db as database } from '@db'
-import { adventures, adventureCharacters } from 'db/schema'
+import { adventures, adventureCharacters, stories, storyCharacters } from 'db/schema'
 
 import ChatQuickActions, { useChatActionsState } from './ChatQuickActions'
 import ChatText from './ChatText'
 import ChatTextLast from './ChatTextLast'
 import { useChatEditorStore } from './ChatEditor'
+import { parseReasoningText } from '@lib/utils/Reasoning'
 import ChatSwipes from './ChatSwipes'
 
-type CreationType = 'character' | 'user' | 'adventure' | null
+type CreationType = 'character' | 'user' | 'adventure' | 'story' | null
 
-const getField = (text: string, key: string) => {
-    const re = new RegExp(`【${key}】[：:]?\\s*([\\s\\S]*?)(?=【|$)`)
-    const m = text.match(re)
-    return m ? m[1].trim() : ''
+const prepareCreationText = (text: string) => {
+    const visible = parseReasoningText(text).content || text
+    return visible
+        .replace(/\*\*/g, '')
+        .replace(/`/g, '')
+        .replace(/［/g, '【')
+        .replace(/］/g, '】')
+        .replace(/^[ \t]*[-*•●·▪◦○]\s+/gm, '')
 }
 
+const FIELD_BOUNDARY =
+    '故事名称|故事标题|故事名|故事简介|世界观|故事背景|主要角色|游戏名|游戏简介|背景故事|系统提示词|配角|角色类型|类型|角色名|性别|年龄|身高|体重|性格特点|人物关系|外貌描述|首条消息|NSFW描述|NSFW|罩杯|臀围|敏感部位|性取向'
+
+const nextField = `\\n\\s*(?:【\\s*(?:${FIELD_BOUNDARY})\\s*】|(?:${FIELD_BOUNDARY})\\s*[：:])`
+
+const getField = (text: string, key: string) => {
+    const source = prepareCreationText(text)
+    const bracket = source.match(
+        new RegExp(`【\\s*${key}\\s*】\\s*[：:]?\\s*([\\s\\S]*?)(?=${nextField}|$)`)
+    )
+    if (bracket?.[1]?.trim()) return bracket[1].trim()
+
+    const labeled = source.match(
+        new RegExp(`(?:^|\\n)\\s*${key}\\s*[：:]\\s*([\\s\\S]*?)(?=${nextField}|$)`)
+    )
+    return labeled?.[1]?.trim() ?? ''
+}
+
+const getStoryName = (text: string) =>
+    getField(text, '故事名称') || getField(text, '故事标题') || getField(text, '故事名')
+
+const hasStoryBody = (text: string) =>
+    !!(getField(text, '故事简介') || getField(text, '故事背景') || getField(text, '主要角色'))
+
 const detectCreationType = (text: string): CreationType => {
+    if (
+        getStoryName(text) ||
+        hasStoryBody(text) ||
+        (getField(text, '世界观') && !getField(text, '游戏名') && !getField(text, '角色名'))
+    )
+        return 'story'
     if (getField(text, '游戏名')) return 'adventure'
     if (getField(text, '类型') === '用户角色' || getField(text, '角色类型') === '用户角色')
         return 'user'
@@ -145,6 +180,51 @@ const parseAdventure = (text: string) => {
     }
 }
 
+const parseStory = (text: string) => {
+    const get = (key: string) => getField(text, key)
+    const name = getStoryName(text)
+    if (!name && !hasStoryBody(text)) return null
+    const castRaw = get('主要角色')
+    return {
+        name: name || '未命名故事',
+        description: get('故事简介'),
+        world_setting: get('世界观'),
+        background: get('故事背景'),
+        cast: castRaw ? parseSupportingCharacters(castRaw) : [],
+    }
+}
+
+const handleCreateStory = async (text: string) => {
+    const story = parseStory(text)
+    if (!story) {
+        Logger.errorToast('无法解析故事信息')
+        return
+    }
+    try {
+        const [result] = await database
+            .insert(stories)
+            .values({
+                name: story.name,
+                description: story.description,
+                world_setting: story.world_setting,
+                background: story.background,
+            })
+            .returning({ id: stories.id })
+        if (story.cast.length > 0) {
+            await database.insert(storyCharacters).values(
+                story.cast.map((member) => ({
+                    story_id: result.id,
+                    name: member.name,
+                    brief_description: member.brief_description,
+                }))
+            )
+        }
+        Logger.infoToast(`故事「${story.name}」创建成功！`)
+    } catch (e) {
+        Logger.errorToast('创建故事失败：' + e)
+    }
+}
+
 const handleCreateCharacter = async (text: string) => {
     const card = parseCharacterCard(text)
     if (!card) {
@@ -228,6 +308,8 @@ const getCreationButtonInfo = (type: CreationType) => {
             return { label: '确认创建用户角色', handler: handleCreateUser }
         case 'adventure':
             return { label: '确认创建游戏', handler: handleCreateAdventure }
+        case 'story':
+            return { label: '确认创建故事', handler: handleCreateStory }
         default:
             return null
     }

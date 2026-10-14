@@ -83,11 +83,6 @@ const paths: ButtonData[] = [
         icon: 'link',
     },
     {
-        name: '图像生成',
-        path: '/screens/ImageGenerationSettingsScreen',
-        icon: 'picture',
-    },
-    {
         name: '关于',
         path: '/screens/AboutScreen',
         icon: 'infocirlceo',

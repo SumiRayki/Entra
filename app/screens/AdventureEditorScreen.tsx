@@ -5,14 +5,12 @@ import Alert from '@components/views/Alert'
 import Avatar from '@components/views/Avatar'
 import FadeBackrop from '@components/views/FadeBackdrop'
 import HeaderTitle from '@components/views/HeaderTitle'
-import ImageGenerationModal from '@components/views/ImageGenerationModal'
 import { db as database } from '@db'
 import { AntDesign } from '@expo/vector-icons'
 import {
     getAdventureNarratorCreatorNote,
     syncAdventureNarrator,
 } from '@lib/state/Adventure'
-import { ImageGeneration } from '@lib/image-generation/Seedream'
 import { Characters } from '@lib/state/Characters'
 import { Logger } from '@lib/state/Logger'
 import { Theme } from '@lib/theme/ThemeManager'
@@ -57,7 +55,6 @@ const AdventureEditorScreen = () => {
     const [supportingChars, setSupportingChars] = useState<SupportingChar[]>([])
 
     const [showCharPicker, setShowCharPicker] = useState(false)
-    const [showChatBackgroundGenerator, setShowChatBackgroundGenerator] = useState(false)
 
     const { data: allCharacters } = useLiveQuery(Characters.db.query.cardListQuery('character'))
     const { data: narratorCard } = useLiveQuery(
@@ -199,19 +196,6 @@ const AdventureEditorScreen = () => {
         }
     }
 
-    const handleApplyGeneratedChatBackground = async (uri: string) => {
-        const result = await saveAdventure()
-        if (!result?.narratorId) {
-            throw new Error('无法同步游戏聊天背景')
-        }
-        await Characters.applyChatBackgroundFromUri(
-            result.narratorId,
-            uri,
-            narratorCard?.chat_background_image
-        )
-        Logger.infoToast('游戏聊天背景已更新')
-    }
-
     const handleDelete = () => {
         if (!adventureId) return
         Alert.alert({
@@ -274,19 +258,6 @@ const AdventureEditorScreen = () => {
     return (
         <SafeAreaView style={{ flex: 1 }} edges={['bottom']}>
             <HeaderTitle title={adventureId ? '编辑游戏' : '创建游戏'} />
-            <ImageGenerationModal
-                visible={showChatBackgroundGenerator}
-                title="AI 生成游戏聊天背景"
-                defaultPrompt={ImageGeneration.buildAdventurePrompt({
-                    name,
-                    description,
-                    scenario,
-                    systemPrompt,
-                })}
-                target="adventure-chat-background"
-                onClose={() => setShowChatBackgroundGenerator(false)}
-                onApplyChatBackground={handleApplyGeneratedChatBackground}
-            />
 
             <Modal
                 visible={showCharPicker}

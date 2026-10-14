@@ -8,12 +8,10 @@ import Avatar from '@components/views/Avatar'
 import AvatarCropModal from '@components/views/AvatarCropModal'
 import AvatarViewer from '@components/views/AvatarViewer'
 import HeaderTitle from '@components/views/HeaderTitle'
-import ImageGenerationModal from '@components/views/ImageGenerationModal'
 import PopupMenu from '@components/views/PopupMenu'
 import { db } from '@db'
 import { AntDesign } from '@expo/vector-icons'
 import { Tokenizer } from '@lib/engine/Tokenizer'
-import { ImageGeneration } from '@lib/image-generation/Seedream'
 import { useAvatarViewerStore } from '@lib/state/AvatarViewer'
 import { CharacterCardData, Characters } from '@lib/state/Characters'
 import { Chats } from '@lib/state/Chat'
@@ -70,8 +68,6 @@ const ChracterEditorScreen = () => {
     const setShowViewer = useAvatarViewerStore((state) => state.setShow)
     const [edited, setEdited] = useState(false)
     const [altSwipeIndex, setAltSwipeIndex] = useState(0)
-    const [showAvatarGenerator, setShowAvatarGenerator] = useState(false)
-    const [showChatBackgroundGenerator, setShowChatBackgroundGenerator] = useState(false)
     const [cropAvatarUri, setCropAvatarUri] = useState('')
 
     const setCharacterCardEdited = (card: CharacterCardData) => {
@@ -179,27 +175,14 @@ const ChracterEditorScreen = () => {
             type: 'image/*',
         }).then((result: DocumentPicker.DocumentPickerResult) => {
             if (result.canceled || !charId) return
-            Characters.useCharacterStore.getState().updateImage(result.assets[0].uri)
+            setCropAvatarUri(result.assets[0].uri)
         })
-    }
-
-    const handleApplyGeneratedAvatar = async (uri: string) => {
-        setShowAvatarGenerator(false)
-        setCropAvatarUri(uri)
     }
 
     const handleConfirmCroppedAvatar = async (uri: string) => {
         Characters.useCharacterStore.getState().updateImage(uri)
         setCropAvatarUri('')
         Logger.infoToast('头像已更新')
-    }
-
-    const handleApplyGeneratedChatBackground = async (uri: string) => {
-        if (!charId) {
-            throw new Error('角色不存在，无法设置聊天背景')
-        }
-        await Characters.applyChatBackgroundFromUri(charId, uri, chatBackgroundImage)
-        Logger.infoToast('聊天背景已更新')
     }
 
     const handleAddAltMessage = async () => {
@@ -259,28 +242,6 @@ const ChracterEditorScreen = () => {
                 }}>
                 <HeaderTitle title="编辑角色" />
                 <AvatarViewer editorButton={false} />
-                <ImageGenerationModal
-                    visible={showAvatarGenerator}
-                    title="AI 生成头像"
-                    defaultPrompt={ImageGeneration.buildCharacterPrompt({
-                        card: characterCard ?? {},
-                        target: 'avatar',
-                    })}
-                    target="avatar"
-                    onClose={() => setShowAvatarGenerator(false)}
-                    onApplyAvatar={handleApplyGeneratedAvatar}
-                />
-                <ImageGenerationModal
-                    visible={showChatBackgroundGenerator}
-                    title="AI 生成聊天背景"
-                    defaultPrompt={ImageGeneration.buildCharacterPrompt({
-                        card: characterCard ?? {},
-                        target: 'character-chat-background',
-                    })}
-                    target="character-chat-background"
-                    onClose={() => setShowChatBackgroundGenerator(false)}
-                    onApplyChatBackground={handleApplyGeneratedChatBackground}
-                />
                 <AvatarCropModal
                     visible={!!cropAvatarUri}
                     imageUri={cropAvatarUri}
@@ -436,13 +397,6 @@ const ChracterEditorScreen = () => {
                                             variant="secondary"
                                         />
                                     )}
-                                    <ThemedButton
-                                        iconName="rocket1"
-                                        iconSize={20}
-                                        label="AI 生成头像"
-                                        variant="secondary"
-                                        onPress={() => setShowAvatarGenerator(true)}
-                                    />
                                 </View>
                                 <ThemedTextInput
                                     onChangeText={(mes) => {

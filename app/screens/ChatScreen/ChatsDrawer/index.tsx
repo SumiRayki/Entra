@@ -2,6 +2,7 @@ import ThemedButton from '@components/buttons/ThemedButton'
 import ThemedTextInput from '@components/input/ThemedTextInput'
 import Drawer from '@components/views/Drawer'
 import { ensureAdventureChatLink, getAdventureIdByChatId } from '@lib/state/Adventure'
+import { ensureStoryChatLink, getStoryIdByChatId } from '@lib/state/Story'
 import { useDebounce } from '@lib/hooks/Debounce'
 import { Characters } from '@lib/state/Characters'
 import { Chats } from '@lib/state/Chat'
@@ -74,6 +75,10 @@ const ChatsDrawer = () => {
                 newChatId,
                 Characters.useUserStore.getState().id ?? null
             )
+        }
+        const storyId = currentChatId ? await getStoryIdByChatId(currentChatId) : null
+        if (storyId) {
+            await ensureStoryChatLink(storyId, newChatId)
         }
 
         await handleLoadChat(newChatId)

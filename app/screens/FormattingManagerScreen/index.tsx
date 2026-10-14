@@ -570,14 +570,14 @@ const FormattingManager = () => {
                         onChangeValue={setSendFilteredText}
                     />
 
-                    <SectionTitle>越狱提示词</SectionTitle>
+                    <SectionTitle>写作提示</SectionTitle>
                     <Text style={{ color: color.text._400 }}>
-                        越狱提示词会注入到系统提示词中，帮助模型生成更自由的内容。
+                        开启后会替换角色自带的直白描写提示。选「聊天记录之后」时，这段话贴在最近的对话后面。
                     </Text>
 
                     <ThemedSwitch
-                        label="启用越狱"
-                        description="在系统提示词中注入越狱提示"
+                        label="启用写作提示"
+                        description="用下面的提示覆盖角色自带的直白描写"
                         value={currentInstruct.jailbreak_enabled ?? false}
                         onChangeValue={(b) => {
                             setCurrentInstruct({
@@ -609,7 +609,7 @@ const FormattingManager = () => {
                             </View>
 
                             <ThemedTextInput
-                                label="越狱提示词"
+                                label="写作提示词"
                                 multiline
                                 numberOfLines={6}
                                 value={currentInstruct.jailbreak_prompt ?? ''}

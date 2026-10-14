@@ -4,8 +4,10 @@ import { Ionicons } from '@expo/vector-icons'
 import { getAdventureIdByChatId, getAdventureIdFromCreatorNotes } from '@lib/state/Adventure'
 import { Characters } from '@lib/state/Characters'
 import { Chats } from '@lib/state/Chat'
+import { getStoryIdByChatId, getStoryIdFromCreatorNotes } from '@lib/state/Story'
 import { Theme } from '@lib/theme/ThemeManager'
 import { setCurrentAdventureId } from '@screens/AdventureEditorScreen'
+import { setCurrentStoryId } from '@screens/StoryEditorScreen'
 import { useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { StyleSheet } from 'react-native'
@@ -16,6 +18,7 @@ const ChatOptions = () => {
     const styles = useStyles()
     const { chatId } = Chats.useChat()
     const [adventureId, setAdventureId] = useState<number | null>(null)
+    const [storyId, setStoryId] = useState<number | null>(null)
     const { creatorNotes, charId } = Characters.useCharacterStore(
         useShallow((state) => ({
             creatorNotes: state.card?.creator_notes,
@@ -32,16 +35,19 @@ const ChatOptions = () => {
     useEffect(() => {
         let cancelled = false
 
-        const loadAdventureId = async () => {
+        const loadModeId = async () => {
             const linkedAdventureId = chatId ? await getAdventureIdByChatId(chatId) : null
             const inferredAdventureId = getAdventureIdFromCreatorNotes(creatorNotes)
+            const linkedStoryId = chatId ? await getStoryIdByChatId(chatId) : null
+            const inferredStoryId = getStoryIdFromCreatorNotes(creatorNotes)
 
             if (!cancelled) {
                 setAdventureId(linkedAdventureId ?? inferredAdventureId)
+                setStoryId(linkedStoryId ?? inferredStoryId)
             }
         }
 
-        loadAdventureId()
+        loadModeId()
 
         return () => {
             cancelled = true
@@ -49,6 +55,11 @@ const ChatOptions = () => {
     }, [chatId, creatorNotes])
 
     const openEditor = async () => {
+        if (storyId) {
+            setCurrentStoryId(storyId)
+            router.push('/screens/StoryEditorScreen')
+            return
+        }
         if (adventureId) {
             setCurrentAdventureId(adventureId)
             router.push('/screens/AdventureEditorScreen')
@@ -72,25 +83,25 @@ const ChatOptions = () => {
                         router.back()
                     },
                     label: '主菜单',
-                    icon: 'back',
+                    icon: 'back' as const,
                 },
                 {
                     onPress: async (m) => {
                         m.current?.close()
                         await openEditor()
                     },
-                    label: '编辑角色',
-                    icon: 'edit',
+                    label: storyId ? '编辑故事' : adventureId ? '编辑游戏' : '编辑角色',
+                    icon: 'edit' as const,
                 },
-                ...(adventureId
+                ...(storyId || adventureId
                     ? [
                           {
                               onPress: (m: any) => {
                                   m.current?.close()
                                   openNarratorViewer()
                               },
-                              label: '查看叙述者',
-                              icon: 'search1',
+                              label: storyId ? '查看作者' : '查看叙述者',
+                              icon: 'search1' as const,
                           },
                       ]
                     : []),
@@ -100,7 +111,7 @@ const ChatOptions = () => {
                         m.current?.close()
                     },
                     label: '聊天记录',
-                    icon: 'paperclip',
+                    icon: 'paperclip' as const,
                 },
             ]}
             placement="top">

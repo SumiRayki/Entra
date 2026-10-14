@@ -7,6 +7,7 @@ import SettingsDrawer from '@components/views/SettingsDrawer'
 import { AntDesign } from '@expo/vector-icons'
 import { AppSettings } from '@lib/constants/GlobalValues'
 import { ensureAdventureChatLink, getAdventureIdByChatId } from '@lib/state/Adventure'
+import { ensureStoryChatLink, getStoryIdByChatId } from '@lib/state/Story'
 import { Characters } from '@lib/state/Characters'
 import { Chats } from '@lib/state/Chat'
 import { Theme } from '@lib/theme/ThemeManager'
@@ -66,6 +67,10 @@ const ChatMenu = () => {
                 newChatId,
                 Characters.useUserStore.getState().id ?? null
             )
+        }
+        const storyId = chat?.id ? await getStoryIdByChatId(chat.id) : null
+        if (storyId) {
+            await ensureStoryChatLink(storyId, newChatId)
         }
 
         await loadChat(newChatId)
